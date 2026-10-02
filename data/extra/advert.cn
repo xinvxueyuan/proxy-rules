@@ -1,0 +1,26 @@
+# advert.cn —— 手工补充层（对上游组打底的补充；上游生成物在 data/upstream/，会被构建覆盖）
+# 语法同 dlc domain-list：domain:x = x 及其子域；full:x = 仅精确匹配
+#
+# 中文互联网广告/统计/推送 SDK（自原 self-reject 迁入 + 常见国内监测域）
+#
+domain:52admin.cn
+domain:adcome.cn
+domain:admaster.com.cn
+domain:adsame.com
+domain:alimama.com
+domain:allyes.com
+domain:beacon.qq.com
+domain:bugly.qq.com
+domain:cnzz.com
+domain:cpro.baidu.com
+domain:ipinyou.com
+domain:mediav.com
+domain:mmstat.com
+domain:mobads.baidu.com
+domain:pingjs.qq.com
+domain:pos.baidu.com
+domain:tanx.com
+domain:umeng.co
+domain:umeng.com
+domain:umengcloud.com
+domain:union.baidu.com

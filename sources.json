@@ -1,58 +1,379 @@
 {
-  "_comment": "本仓自持规则的唯一来源声明。机器可读，build 前由 scripts/fetch_upstream.py 拉取。",
+  "_comment": "本仓规则来源与分类的唯一声明。机器可读，构建前由 scripts/fetch_upstream.py 执行。自持列表在 data/domains/（手写），对上游组的手工补充在 data/extra/（手写）。",
   "upstream": [
     {
-      "tag": "china-direct",
-      "purpose": "国内域名直连（「只要国内域名直连、其余走代理兜底」里的那份『国内』）",
+      "tag": "site.cn",
+      "purpose": "国内域名直连（「国内直连、其余走代理兜底」里的那份『国内』）",
       "url": "https://raw.githubusercontent.com/Loyalsoldier/clash-rules/release/direct.txt",
       "format": "clash-domain",
       "repo": "Loyalsoldier/clash-rules",
       "license": "GPL-3.0",
-      "license_url": "https://github.com/Loyalsoldier/clash-rules/blob/release/LICENSE",
-      "note": "该表由「能解析到中国大陆 IP 的域名」汇总而来，约 11 万条，覆盖最全。",
-      "gitignore": true
+      "note": "该表由「能解析到中国大陆 IP 的域名」汇总而来，约 11.1 万条，覆盖最全。"
+    },
+    {
+      "tag": "advert.base",
+      "internal": true,
+      "purpose": "广告/追踪底座（参与分类，不直接出产物）",
+      "url": "https://raw.githubusercontent.com/hagezi/dns-blocklists/main/wildcard/light-onlydomains.txt",
+      "format": "domains",
+      "repo": "hagezi/dns-blocklists",
+      "license": "GPL-3.0",
+      "note": "Light 档：基础防护，拦广告/追踪/统计/遥测与部分 badware，作者称「不会造成实际限制」。14,254 条。"
+    },
+    {
+      "tag": "native.winoffice",
+      "internal": true,
+      "purpose": "微软设备遥测",
+      "url": "https://raw.githubusercontent.com/hagezi/dns-blocklists/main/wildcard/native.winoffice-onlydomains.txt",
+      "format": "domains",
+      "repo": "hagezi/dns-blocklists",
+      "license": "GPL-3.0"
+    },
+    {
+      "tag": "native.xiaomi",
+      "internal": true,
+      "purpose": "小米设备遥测",
+      "url": "https://raw.githubusercontent.com/hagezi/dns-blocklists/main/wildcard/native.xiaomi-onlydomains.txt",
+      "format": "domains",
+      "repo": "hagezi/dns-blocklists",
+      "license": "GPL-3.0"
+    },
+    {
+      "tag": "native.huawei",
+      "internal": true,
+      "purpose": "华为设备遥测",
+      "url": "https://raw.githubusercontent.com/hagezi/dns-blocklists/main/wildcard/native.huawei-onlydomains.txt",
+      "format": "domains",
+      "repo": "hagezi/dns-blocklists",
+      "license": "GPL-3.0"
+    },
+    {
+      "tag": "native.vivo",
+      "internal": true,
+      "purpose": "vivo 设备遥测",
+      "url": "https://raw.githubusercontent.com/hagezi/dns-blocklists/main/wildcard/native.vivo-onlydomains.txt",
+      "format": "domains",
+      "repo": "hagezi/dns-blocklists",
+      "license": "GPL-3.0"
+    },
+    {
+      "tag": "native.oppo-realme",
+      "internal": true,
+      "purpose": "OPPO / realme 设备遥测",
+      "url": "https://raw.githubusercontent.com/hagezi/dns-blocklists/main/wildcard/native.oppo-realme-onlydomains.txt",
+      "format": "domains",
+      "repo": "hagezi/dns-blocklists",
+      "license": "GPL-3.0"
+    },
+    {
+      "tag": "native.apple",
+      "internal": true,
+      "purpose": "苹果设备遥测（无对应组，归入 advert.com 通用）",
+      "url": "https://raw.githubusercontent.com/hagezi/dns-blocklists/main/wildcard/native.apple-onlydomains.txt",
+      "format": "domains",
+      "repo": "hagezi/dns-blocklists",
+      "license": "GPL-3.0"
+    },
+    {
+      "tag": "native.amazon",
+      "internal": true,
+      "purpose": "亚马逊设备遥测（无对应组，归入 advert.com 通用）",
+      "url": "https://raw.githubusercontent.com/hagezi/dns-blocklists/main/wildcard/native.amazon-onlydomains.txt",
+      "format": "domains",
+      "repo": "hagezi/dns-blocklists",
+      "license": "GPL-3.0"
+    },
+    {
+      "tag": "native.samsung",
+      "internal": true,
+      "purpose": "三星设备遥测（无对应组，归入 advert.com 通用）",
+      "url": "https://raw.githubusercontent.com/hagezi/dns-blocklists/main/wildcard/native.samsung-onlydomains.txt",
+      "format": "domains",
+      "repo": "hagezi/dns-blocklists",
+      "license": "GPL-3.0"
+    },
+    {
+      "tag": "native.tiktok",
+      "internal": true,
+      "purpose": "TikTok 遥测（无对应组，归入 advert.com 通用）",
+      "url": "https://raw.githubusercontent.com/hagezi/dns-blocklists/main/wildcard/native.tiktok-onlydomains.txt",
+      "format": "domains",
+      "repo": "hagezi/dns-blocklists",
+      "license": "GPL-3.0"
     }
   ],
+  "groups": {
+    "advert.gg": {
+      "label": "谷歌隐私与广告",
+      "from_suffixes": [
+        "google.com",
+        "googlesyndication.com",
+        "doubleclick.net",
+        "googletagmanager.com",
+        "google-analytics.com",
+        "googleanalytics.com",
+        "googleadservices.com",
+        "gstatic.com",
+        "2mdn.net",
+        "admob.com",
+        "app-measurement.com",
+        "crashlytics.com",
+        "goog",
+        "gvt1.com",
+        "gvt2.com",
+        "youtube.com",
+        "ytimg.com",
+        "ggpht.com",
+        "googleusercontent.com",
+        "googlesource.com",
+        "googleapis.com",
+        "googletagservices.com",
+        "googleoptimize.com",
+        "urchin.com",
+        "withgoogle.com",
+        "firebase",
+        "googleadsserving.cn"
+      ]
+    },
+    "advert.ms": {
+      "label": "微软隐私与广告",
+      "from_suffixes": [
+        "microsoft.com",
+        "bing.com",
+        "msn.com",
+        "clarity.ms",
+        "live.com",
+        "msads.net",
+        "windows.com",
+        "office.net",
+        "skype.com",
+        "xboxlive.com",
+        "visualstudio.com",
+        "azure.com",
+        "msecnd.net",
+        "windowsupdate",
+        "msftconnecttest",
+        "microsoftonline",
+        "msedge.net",
+        "microsofttranslator.com"
+      ],
+      "plus": [
+        "native.winoffice"
+      ]
+    },
+    "advert.fb": {
+      "label": "Meta 隐私与广告",
+      "from_suffixes": [
+        "facebook.com",
+        "facebook.net",
+        "fbcdn.net",
+        "fb.com",
+        "fb.gg",
+        "instagram.com",
+        "cdninstagram.com",
+        "messenger.com",
+        "whatsapp.net",
+        "whatsapp.com",
+        "atlassolutions.com",
+        "onavo.com",
+        "fbsbx.com",
+        "accountkit.com"
+      ]
+    },
+    "advert.x": {
+      "label": "推特（X）隐私与广告",
+      "from_suffixes": [
+        "twitter.com",
+        "x.com",
+        "twimg.com",
+        "ads-twitter.com",
+        "t.co",
+        "twtr.com",
+        "twttr.com",
+        "periscope.tv",
+        "pscp.tv"
+      ]
+    },
+    "advert.tg": {
+      "label": "Telegram 推广与追踪",
+      "from_suffixes": [
+        "telegram.org",
+        "telegram.me",
+        "telegra.ph",
+        "t.me",
+        "tg.dev",
+        "telesco.pe",
+        "telegram-cdn.org"
+      ]
+    },
+    "advert.org": {
+      "label": "公益 / 非盈利广告（公共列表无源，纯自持）",
+      "from_suffixes": []
+    },
+    "advert.cn": {
+      "label": "中文互联网隐私与追踪",
+      "from_suffixes": [
+        "umeng.com",
+        "umengcloud.com",
+        "umeng.co",
+        "cnzz.com",
+        "51.la",
+        "51y5.net",
+        "baidu.com",
+        "pos.baidu.com",
+        "cpro.baidu.com",
+        "union.baidu.com",
+        "mobads.baidu.com",
+        "qq.com",
+        "gtimg.com",
+        "bugly.qq.com",
+        "beacon.qq.com",
+        "pingjs.qq.com",
+        "tanx.com",
+        "alimama.com",
+        "mmstat.com",
+        "admaster.com.cn",
+        "adsame.com",
+        "allyes.com",
+        "ipinyou.com",
+        "mediav.com",
+        "jpush.cn",
+        "getui.com",
+        "igexin.com",
+        "talkingdata.com",
+        "talkingdata.net",
+        "growingio.com",
+        "sensorsdata.cn",
+        "zhugeio.com",
+        "mob.com",
+        "mobpalm.com",
+        "kuaishou.com",
+        "toutiao.com",
+        "pangle.io",
+        "bytedance.com",
+        "douyin.com",
+        "xiaomi.com",
+        "miui.com",
+        "huawei.com",
+        "hicloud.com",
+        "vivo.com",
+        "oppo.com",
+        "heytapmobile.com",
+        "realme.com",
+        "allawntech.com",
+        "wps.cn",
+        "kingsoft.com",
+        "360.cn",
+        "qihoo.com",
+        "sogou.com",
+        "sohu.com",
+        "sina.com.cn",
+        "weibo.com",
+        "zhihu.com",
+        "douban.com",
+        "meituan.com",
+        "jd.com",
+        "alipay.com",
+        "amap.com",
+        "autonavi.com",
+        "mapbar.com",
+        "netease.com",
+        "163.com",
+        "ifeng.com",
+        "youku.com",
+        "iqiyi.com",
+        "bilibili.com",
+        "ximalaya.com",
+        "kugou.com",
+        "didi",
+        "youdao.com"
+      ],
+      "plus": [
+        "native.xiaomi",
+        "native.huawei",
+        "native.vivo",
+        "native.oppo-realme"
+      ]
+    },
+    "advert.com": {
+      "label": "商业广告（通用广告网络 ∪ 下列各生态子组）",
+      "union_of": [
+        "advert.org",
+        "advert.gg",
+        "advert.ms",
+        "advert.fb",
+        "advert.x",
+        "advert.tg"
+      ],
+      "rest_of": "advert.base",
+      "plus": [
+        "native.apple",
+        "native.amazon",
+        "native.samsung",
+        "native.tiktok"
+      ]
+    }
+  },
   "catalog": [
     {
       "name": "geosite:cn",
       "url": "https://github.com/v2fly/domain-list-community/tree/master/data/cn",
       "entries": 6624,
       "license": "MIT",
-      "note": "v2fly 精选维护版；实测 88.8% 被 china-direct 包含。想用官方 dat 里的 geosite:cn 时无需本仓产物。"
+      "note": "v2fly 精选维护版；实测 88.8% 被 site.cn（Loyalsoldier direct）包含。"
     },
     {
       "name": "geosite:category-ads-all",
       "url": "https://github.com/v2fly/domain-list-community/tree/master/data/category-ads-all",
       "entries": 911,
       "license": "MIT",
-      "note": "广告大合集，可与自持 self-reject 并用（客户端并写一条引用即可）。"
+      "note": "未采用：分类后生态桶太薄（gg 23 / ms 3 / fb 6 / x 1 / tg 0）。"
     },
     {
-      "name": "MetaCubeX cn",
+      "name": "MetaCubeX category-ads-all",
       "url": "https://github.com/MetaCubeX/meta-rules-dat",
-      "entries": 111224,
+      "entries": 910,
       "license": "GPL-3.0",
-      "note": "与 Loyalsoldier direct 实测重复 98.2%（109263 条交集），属同一份东西，不需要两个都上。"
+      "note": "未采用：条数过少，生态桶只有个位数。"
+    },
+    {
+      "name": "1Hosts Lite",
+      "url": "https://github.com/badmojr/1Hosts",
+      "entries": 202955,
+      "license": "GPL-3.0",
+      "note": "未采用：20 万条、Clash 产物约 5.2MB，误杀概率明显更高；生态桶确实厚（gg 9342）但代价大。"
+    },
+    {
+      "name": "hagezi normal (multi)",
+      "url": "https://github.com/hagezi/dns-blocklists",
+      "entries": 199122,
+      "license": "GPL-3.0",
+      "note": "未采用：约 19.9 万条 / 5.1MB，比 light 大一档。"
+    },
+    {
+      "name": "hagezi pro",
+      "url": "https://github.com/hagezi/dns-blocklists",
+      "entries": 227572,
+      "license": "GPL-3.0",
+      "note": "未采用：同上，22.7 万条 / 约 5.9MB。"
     },
     {
       "name": "Loyalsoldier cncidr",
       "url": "https://raw.githubusercontent.com/Loyalsoldier/clash-rules/release/cncidr.txt",
       "entries": 9649,
       "license": "GPL-3.0",
-      "note": "国内 IP 段。**未采用**：mihomo 有内置 GEOIP,CN、Xray 有内置 geoip:cn，无需自维。"
+      "note": "国内 IP 段。未采用：mihomo 有内置 GEOIP,CN、Xray 有内置 geoip:cn。"
     },
     {
-      "name": "geosite:geolocation-!cn",
-      "url": "https://github.com/v2fly/domain-list-community/tree/master/data/geolocation-!cn",
-      "entries": 25023,
+      "name": "官方 dlc（v2fly/domain-list-community）",
+      "url": "https://github.com/v2fly/domain-list-community",
       "license": "MIT",
-      "note": "「非中国大陆」集合。**未采用**：本项目是「默认走代理、国内直连」模型，兜底即代理，不需要反面列表。"
+      "note": "**未用于本仓构建**：其 tag 名校验只允许 [A-Z0-9!-]、不含点，产不出 site.cn / advert.com 这类组名（实测 `invalid list name` 后退出）。故改用 scripts/build_xray_data.py 纯 Python 编码 dat。官方 dat 仍可用于客户端并引 geosite:cn / geoip:private 等内置 tag。"
     }
   ],
   "kernels": {
     "mihomo": "v1.19.32",
     "xray": "v26.9.30",
-    "note": "Xray 新版走 pre-release 通道（releases/latest 只指到 v26.3.27），CI 取最新一个 release 含 pre-release。"
+    "note": "Xray 新版走 pre-release 通道（releases/latest 只指到 v26.3.27），CI 取最新一个 release（含 pre-release）。"
   }
 }

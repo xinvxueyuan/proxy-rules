@@ -165,7 +165,7 @@ def main() -> int:
     for f in (XRAY_DIR / "self-geosite.dat", XRAY_DIR / "self-geoip.dat",
               CLASH_DIR / "MANIFEST.json"):
         if not f.exists():
-            print(f"❌ 缺产物 {f.relative_to(ROOT)}（先跑 build_clash.py / build_xray.sh）")
+            print(f"❌ 缺产物 {f.relative_to(ROOT)}（先跑 scripts/build.sh 或分步 build_clash.py + build_xray_data.py）")
             return 2
 
     geosite = parse_geosite((XRAY_DIR / "self-geosite.dat").read_bytes())

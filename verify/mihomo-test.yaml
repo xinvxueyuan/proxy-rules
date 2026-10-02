@@ -1,6 +1,7 @@
 # 仅用于 CI 校验：把 dist/clash/*.yaml 当作本地 rule-provider 加载一遍。
 #
-# 规则顺序即生产建议顺序：拦截 → 代理覆盖 → 国内直连 → 兜底代理。
+# 规则顺序即生产建议顺序：商业广告拦截 → 中文互联网追踪拦截 → 自持强制代理 →
+# 国内直连 → 国内 IP 直连 → 兜底走代理。
 # 注意这里**不写 GEOIP,CN**：那会让 mihomo 去下载 geoip.dat，
 # 校验应当自洽、不依赖外部下载（真要用见 README 的客户端配置）。
 mixed-port: 7899
@@ -22,6 +23,42 @@ proxy-groups:
     proxies: [dummy, DIRECT]
 
 rule-providers:
+  advert.com:
+    type: file
+    behavior: domain
+    path: dist/clash/advert.com.yaml
+  advert.cn:
+    type: file
+    behavior: domain
+    path: dist/clash/advert.cn.yaml
+  advert.gg:
+    type: file
+    behavior: domain
+    path: dist/clash/advert.gg.yaml
+  advert.ms:
+    type: file
+    behavior: domain
+    path: dist/clash/advert.ms.yaml
+  advert.fb:
+    type: file
+    behavior: domain
+    path: dist/clash/advert.fb.yaml
+  advert.x:
+    type: file
+    behavior: domain
+    path: dist/clash/advert.x.yaml
+  advert.tg:
+    type: file
+    behavior: domain
+    path: dist/clash/advert.tg.yaml
+  advert.org:
+    type: file
+    behavior: domain
+    path: dist/clash/advert.org.yaml
+  site.cn:
+    type: file
+    behavior: domain
+    path: dist/clash/site.cn.yaml
   self-direct:
     type: file
     behavior: domain
@@ -30,23 +67,16 @@ rule-providers:
     type: file
     behavior: domain
     path: dist/clash/self-proxy.yaml
-  self-reject:
-    type: file
-    behavior: domain
-    path: dist/clash/self-reject.yaml
   self-direct-ip:
     type: file
     behavior: ipcidr
     path: dist/clash/self-direct-ip.yaml
-  china-direct:
-    type: file
-    behavior: domain
-    path: dist/clash/china-direct.yaml
 
 rules:
-  - RULE-SET,self-reject,REJECT
+  - RULE-SET,advert.com,REJECT
+  - RULE-SET,advert.cn,REJECT
   - RULE-SET,self-proxy,PROXY
-  - RULE-SET,china-direct,DIRECT
+  - RULE-SET,site.cn,DIRECT
   - RULE-SET,self-direct,DIRECT
   - RULE-SET,self-direct-ip,DIRECT,no-resolve
   - MATCH,PROXY

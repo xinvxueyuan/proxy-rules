@@ -28,19 +28,20 @@ jobs:
         with:
           python-version: "3.12"
 
-      - uses: actions/setup-go@v5
-        with:
-          go-version: stable
-          cache: false
+      # 不需要 Go 工具链：两个 .dat 由 scripts/build_xray_data.py 纯 Python 生成
+      # （官方 dlc 的 tag 名校验不允许点，产不出 site.cn / advert.com 这类组名）。
 
-      - name: 拉取上游规则列表
+      - name: 拉取上游并按生态分类
         run: python3 scripts/fetch_upstream.py
+
+      - name: 合并三层数据并解析聚合组
+        run: python3 scripts/assemble_data.py
 
       - name: 生成 Clash rule-provider
         run: python3 scripts/build_clash.py
 
       - name: 生成 Xray geosite.dat / geoip.dat
-        run: bash scripts/build_xray.sh
+        run: python3 scripts/build_xray_data.py
 
       - name: 用真实内核校验产物（含变异检验 + 一致性）
         run: bash scripts/verify.sh
@@ -52,7 +53,7 @@ jobs:
             | sort -z | xargs -0 sha256sum > dist/MANIFEST.sha256
           cat dist/MANIFEST.sha256
 
-      # 产物不进 main：main 每天被 2.8MB 的产物撑一次会把历史撑爆。
+      # 产物不进 main：main 每天被几 MB 的产物撑一次会把历史撑爆。
       # 改成往一个**孤立的 dist 分支**强推「只有一个快照提交」的分支，
       # 这样 raw 直链依然可用，而分支历史永远只有 1 个提交、不会累积。
       - name: 发布产物到 dist 分支（单快照强推）
@@ -63,7 +64,7 @@ jobs:
           ART=/tmp/dist-artifacts
           rm -rf "$ART" && mkdir -p "$ART"
           cp -r dist/. "$ART/"
-          find "$ART" -name '*.db' -delete   # 清掉内核缓存
+          find "$ART" \( -name '*.db' -o -name '*.log' \) -delete
           cd "$ART"
           git init -q -b dist
           git config user.name  "github-actions[bot]"
@@ -86,8 +87,12 @@ jobs:
             dist/clash/*.yaml dist/clash/MANIFEST.json \
             dist/PROVENANCE.json dist/MANIFEST.sha256 \
             --title "rules $(date -u +%Y-%m-%d)" \
-            --notes "自持 + 上游合并的分流规则产物（geosite.dat / geoip.dat / rule-provider）。
+            --notes "自持 + 上游合并的分流规则产物。
+
+          - geosite.dat / geoip.dat：Xray 用，tag 为 SITE.CN / ADVERT.* / SELF-*
+          - clash/*.yaml：mihomo rule-provider
+          - PROVENANCE.json：上游来源、sha256、条数、分类明细
+          - MANIFEST.sha256：全量产物校验和
 
           上游来源与许可证见 PROVENANCE.json 与 sources.json。
-          提交：${{ github.sha }}
-          校验清单见 MANIFEST.sha256。"
+          提交：${{ github.sha }}"

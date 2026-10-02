@@ -1,0 +1,11 @@
+# advert.tg —— 手工补充层（对上游组打底的补充；上游生成物在 data/upstream/，会被构建覆盖）
+# 语法同 dlc domain-list：domain:x = x 及其子域；full:x = 仅精确匹配
+#
+# Telegram 推广与统计端点。公共列表里**没有**任何电报相关广告域（实测分类结果 0 条），
+# 故本组为纯自持小清单。**刻意不含 telegram.org / t.me / telegra.ph 本体** ——
+# 那是电报服务与链接域名，拦掉会断掉电报本身。
+# 实探存在：ads.telegram.org / promote.telegram.org / stats.telegram.org
+#
+domain:ads.telegram.org
+domain:promote.telegram.org
+domain:stats.telegram.org

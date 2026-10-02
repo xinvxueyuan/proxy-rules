@@ -1,0 +1,15 @@
+# advert.gg —— 手工补充层（对上游组打底的补充；上游生成物在 data/upstream/，会被构建覆盖）
+# 语法同 dlc domain-list：domain:x = x 及其子域；full:x = 仅精确匹配
+#
+# 谷歌系广告/统计（自原 self-reject 迁入；上游分类已能覆盖大部分，这里补常见入口）
+#
+domain:adservice.google.com
+domain:doubleclick.net
+domain:google-analytics.com
+domain:googleadservices.com
+domain:googleadsserving.cn
+domain:googleanalytics.com
+domain:googleoptimize.com
+domain:googlesyndication.com
+domain:googletagmanager.com
+domain:googletagservices.com
