@@ -121,7 +121,8 @@ XRAY_LOCATION_ASSET=/usr/local/share/xray xray run -c /etc/xray/config.json
       { "type": "field", "outboundTag": "proxy",
         "domain": ["ext:self-geosite.dat:self-proxy"] },
       { "type": "field", "outboundTag": "direct",
-        "domain": ["ext:self-geosite.dat:china-direct", "ext:self-geosite.dat:self-direct"],
+        "domain": ["ext:self-geosite.dat:china-direct", "ext:self-geosite.dat:self-direct"] },
+      { "type": "field", "outboundTag": "direct",
         "ip": ["ext:self-geoip.dat:self-direct", "geoip:private", "geoip:cn"] },
       { "type": "field", "outboundTag": "proxy", "network": "tcp,udp" }
     ]
@@ -146,6 +147,25 @@ Xray 支持**按 URL 热更新** `.dat`（不用重启、不用手动放文件�
   }
 }
 ```
+
+### ⚠️ `domain` 与 `ip` 必须拆成两条规则（实测）
+
+Xray 的一条规则里同时给 `domain` 和 `ip` 时，两者是 **AND** —— 必须同时命中才算命中该规则
+（真 xray 26.9.9 实测：用「域名命中、IP 不命中」的目标探测这条规则，结果落到下一条兜底规则）。
+把「域名直连」与「IP 直连」混写在一条里，这条规则就**永不命中**。
+
+```
+✅ 正确：两条规则
+  { "outboundTag": "direct", "domain": ["ext:self-geosite.dat:china-direct"] }
+  { "outboundTag": "direct", "ip": ["ext:self-geoip.dat:self-direct","geoip:private","geoip:cn"] }
+
+❌ 错误：混在一条里 → 永不命中
+  { "outboundTag": "direct",
+    "domain": ["ext:self-geosite.dat:china-direct"],
+    "ip": ["geoip:cn"] }
+```
+
+（`domain` 数组内部、`ip` 数组内部各自是 OR：任一命中即算该维度命中。）
 
 ### ⚠️ 产物为什么不叫 `geosite.dat` / `geoip.dat`
 

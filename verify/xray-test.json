@@ -28,12 +28,17 @@
         "domain": ["ext:self-geosite.dat:self-proxy"]
       },
       {
+        "_comment": "域名维度与 IP 维度必须拆成两条规则：同一条规则里 domain 与 ip 是 AND（实测），混写会让整条永不命中。",
         "type": "field",
         "outboundTag": "direct",
         "domain": [
           "ext:self-geosite.dat:china-direct",
           "ext:self-geosite.dat:self-direct"
-        ],
+        ]
+      },
+      {
+        "type": "field",
+        "outboundTag": "direct",
         "ip": [
           "ext:self-geoip.dat:self-direct",
           "geoip:private"
