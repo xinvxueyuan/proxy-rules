@@ -312,6 +312,66 @@
         "native.samsung",
         "native.tiktok"
       ]
+    },
+    "site.cn.gov": {
+      "label": "中国政务（通配根域名，手工保底）",
+      "hand": true,
+      "note": "`domain:X` 通配覆盖 X 及其所有子域（DNS 树意义），所以只写根域；每个条目都经 DNS 实测。只收大陆站点。"
+    },
+    "site.cn.media": {
+      "label": "中国媒体（通配根域名，手工保底）",
+      "hand": true,
+      "note": "`domain:X` 通配覆盖 X 及其所有子域（DNS 树意义），所以只写根域；每个条目都经 DNS 实测。只收大陆站点。"
+    },
+    "site.cn.edu": {
+      "label": "中国教育（通配根域名，手工保底）",
+      "hand": true,
+      "note": "`domain:X` 通配覆盖 X 及其所有子域（DNS 树意义），所以只写根域；每个条目都经 DNS 实测。只收大陆站点。"
+    },
+    "site.cn.med": {
+      "label": "中国医疗（通配根域名，手工保底）",
+      "hand": true,
+      "note": "`domain:X` 通配覆盖 X 及其所有子域（DNS 树意义），所以只写根域；每个条目都经 DNS 实测。只收大陆站点。"
+    },
+    "site.cn.fin": {
+      "label": "中国金融（通配根域名，手工保底）",
+      "hand": true,
+      "note": "`domain:X` 通配覆盖 X 及其所有子域（DNS 树意义），所以只写根域；每个条目都经 DNS 实测。只收大陆站点。"
+    },
+    "site.cn.life": {
+      "label": "中国生活服务（通配根域名，手工保底）",
+      "hand": true,
+      "note": "`domain:X` 通配覆盖 X 及其所有子域（DNS 树意义），所以只写根域；每个条目都经 DNS 实测。只收大陆站点。"
+    },
+    "site.cn.map": {
+      "label": "中国地图（通配根域名，手工保底）",
+      "hand": true,
+      "note": "`domain:X` 通配覆盖 X 及其所有子域（DNS 树意义），所以只写根域；每个条目都经 DNS 实测。只收大陆站点。"
+    },
+    "site.cn.travel": {
+      "label": "中国出行（通配根域名，手工保底）",
+      "hand": true,
+      "note": "`domain:X` 通配覆盖 X 及其所有子域（DNS 树意义），所以只写根域；每个条目都经 DNS 实测。只收大陆站点。"
+    },
+    "site.cn.shop": {
+      "label": "中国购物（通配根域名，手工保底）",
+      "hand": true,
+      "note": "`domain:X` 通配覆盖 X 及其所有子域（DNS 树意义），所以只写根域；每个条目都经 DNS 实测。只收大陆站点。"
+    },
+    "site.cn": {
+      "label": "国内域名直连（上游大名单 ∪ 9 个手工分类组）",
+      "union_of": [
+        "site.cn.gov",
+        "site.cn.media",
+        "site.cn.edu",
+        "site.cn.med",
+        "site.cn.fin",
+        "site.cn.life",
+        "site.cn.map",
+        "site.cn.travel",
+        "site.cn.shop"
+      ],
+      "note": "上游部分来自 Loyalsoldier direct（约 11.1 万条，会随上游每日变化）；union_of 的 9 个手工组是**保底**，确保政务/媒体/教育/医疗/金融/生活服务/地图/出行/购物这些站点永远不被漏掉。"
     }
   },
   "catalog": [
