@@ -11,7 +11,7 @@
 
 | 产物 | 用途 | 地址 |
 |---|---|---|
-| `self-geosite.dat` | Xray 域名规则集（`ext:self-geosite.dat:<tag>`） | `https://github.com/xinvxueyuan/proxy-rules/releases/latest/download/self-geosite.dat` |
+| `self-geosite.dat` | Xray 域名规则集（`ext:self-geosite.dat:<tag>`，tag 大小写不敏感） | `https://github.com/xinvxueyuan/proxy-rules/releases/latest/download/self-geosite.dat` |
 | `self-geoip.dat` | Xray IP 规则集（`ext:self-geoip.dat:<tag>`） | `https://github.com/xinvxueyuan/proxy-rules/releases/latest/download/self-geoip.dat` |
 | `dist/clash/*.yaml` | mihomo rule-provider | `https://raw.githubusercontent.com/xinvxueyuan/proxy-rules/main/dist/clash/<name>.yaml` |
 | `dist/clash/MANIFEST.json` | 每个产物的 behavior / 条数 / sha256 | 同上目录 |
@@ -123,6 +123,18 @@ Xray 的 `geosite:` / `geoip:` 内置引用读的是资源目录里**固定文�
 所以自建产物用 `self-` 前缀：与官方 dat **并存**，`ext:self-geosite.dat:<tag>` 引用自建，
 `geosite:<tag>` 引用官方，两边互不遮蔽。CI 的校验步骤就是把两份同时放进资源目录跑的。
 
+### 关于 tag 大小写与条数（实测结论）
+
+- **tag 匹配大小写不敏感**：`self-direct` 与 `SELF-DIRECT` 都能用
+  （`dlc` 生成时把 tag 存成大写，Xray 查询时统一转大写）。实测环境 Xray 26.9.9。
+- **`ext:` 里写不存在的 tag 会直接报错**（`failed to check code XXX from ...`），
+  所以「配置能起来」就等于「tag 真的存在」——不会静默失效。
+- **两种格式的条数可能不同，但语义等价**：`dlc` 会剪掉被父域覆盖的冗余子域
+  （`data/domains/self-direct` 里的 `weixin.qq.com` 被同列表的 `domain:qq.com` 覆盖，
+  于是不进 dat），而 Clash 侧保留。CI 的 `scripts/verify_consistency.py` 会断言
+  「dat 的每条都在 Clash 里」且「只在 Clash 里的每条都被某个父域覆盖」，
+  既不允许真丢条目，也允许合理的剪枝差异。IP 列表不做剪枝，两侧必须完全相等。
+
 ## 编辑规则（唯一入口：`data/`）
 
 ```
@@ -170,17 +182,28 @@ include:other-file        # 引用同目录另一文件
 1. `scripts/build_clash.py` 生成 `dist/clash/*.yaml` 与 `MANIFEST.json`；
 2. `scripts/build_xray.sh` 用官方工具生成 `geosite.dat`（[dlc](https://github.com/v2fly/domain-list-community)）
    与 `geoip.dat`（[v2fly/geoip](https://github.com/v2fly/geoip)）；
-3. **`scripts/verify.sh` 用真实内核加载产物**（下载最新 Xray 与 mihomo，跑
-   `xray run -test` 与 `mihomo -t`）——文件存在不等于规则能用；
+3. **`scripts/verify.sh` 用真实内核加载产物**（下载最新 Xray 与 mihomo）：
+   - Xray 侧跑 `xray run -test`，把自建 dat 与**官方 dat 一起**放进资源目录，
+     既验证能加载，也验证不会遮蔽 `geosite:cn` / `geoip:private` 这类官方引用；
+   - Clash 侧**真启动 mihomo** 并查 `/providers/rules` 的真实 `ruleCount`，
+     与 `MANIFEST.json` 逐项对齐；
+   - 两侧都跑**变异检验**（dat 缺失/损坏、rule-provider 空文件/条数不符必须报错），
+     否则校验本身就是个空壳；
+4. `scripts/verify_consistency.py` 断言两种格式语义等价（见下）；
 4. 提交 `dist/`，并把两个 `.dat` 发布到 `rules-latest` Release（地址固定，见上表）。
 
 本地复现：
 
 ```bash
-python3 scripts/build_clash.py          # 只需 PyYAML 之外的标准库
-bash scripts/build_xray.sh              # 需要 go
-bash scripts/verify.sh                  # 需要 curl/unzip/python3
+python3 scripts/build_clash.py          # 纯标准库
+bash scripts/build_xray.sh              # 需要 go（dlc + v2fly/geoip）
+bash scripts/verify.sh                  # 需要 curl / unzip / python3
+python3 scripts/verify_consistency.py   # 需要先有 dist/xray/*.dat
 ```
+
+> ⚠️ `dist/` 由 CI 生成并提交，**本地跑构建后不要提交 dist**：
+> 产物按 LF 写入（`newline="\n"`），但本地工作区可能被 git 换成 CRLF，
+> 会让 `MANIFEST.json` 里的 sha256 与 CI 的不一致、天天产生无意义 diff。
 
 ## 内核版本
 

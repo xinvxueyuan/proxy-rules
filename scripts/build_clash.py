@@ -117,13 +117,15 @@ def main() -> int:
                     payload.append("DOMAIN," + item)
             payload.extend(special)
             out = OUT_DIR / f"{path.name}.classical.yaml"
-            out.write_text(dump_yaml(path.name, "classical", payload), encoding="utf-8")
+            out.write_text(dump_yaml(path.name, "classical", payload),
+                           encoding="utf-8", newline="\n")
             problems.append(
                 f"{path.name}: 含 keyword/regexp → 输出 classical（behavior 请配 classical），"
                 f"文件 {out.name}")
         else:
             out = OUT_DIR / f"{path.name}.yaml"
-            out.write_text(dump_yaml(path.name, "domain", plain), encoding="utf-8")
+            out.write_text(dump_yaml(path.name, "domain", plain),
+                           encoding="utf-8", newline="\n")
         payload_len = len(payload) if special else len(plain)
         manifest.append({
             # name = Clash 配置里 rule-providers 的键名，必须唯一
@@ -147,7 +149,7 @@ def main() -> int:
         # self-direct.yaml，同名会互相覆盖（少一个文件还很难察觉）。
         out_name = f"{name}-ip.yaml"
         out = OUT_DIR / out_name
-        out.write_text(dump_yaml(name, "ipcidr", ips), encoding="utf-8")
+        out.write_text(dump_yaml(name, "ipcidr", ips), encoding="utf-8", newline="\n")
         manifest.append({
             # IP 列表的 provider 名带 -ip 后缀，避免与同名域名列表撞名
             "name": out_name[:-len(".yaml")], "file": out_name,
@@ -157,7 +159,8 @@ def main() -> int:
 
     (OUT_DIR / "MANIFEST.json").write_text(
         json.dumps({"generated_by": "scripts/build_clash.py", "artifacts": manifest},
-                   ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+                   ensure_ascii=False, indent=2) + "\n",
+        encoding="utf-8", newline="\n")
 
     print(f"生成 {len(manifest)} 个 rule-provider → {OUT_DIR.relative_to(ROOT)}/")
     for item in manifest:
