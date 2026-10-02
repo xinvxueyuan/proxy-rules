@@ -53,6 +53,22 @@ def main() -> int:
 
     expected = {a["name"]: a for a in json.loads(MANIFEST.read_text(encoding="utf-8"))["artifacts"]}
 
+    # 保险 1：端口必须是空的。若已有实例在听，API 会由**别的进程**回答，
+    # 拿着上一轮的好数据把这次校验伪装成通过（实测踩到过：updatedAt 是上一轮的时间）。
+    import socket
+    host, port = "127.0.0.1", int(API.rsplit(":", 1)[1])
+    with socket.socket() as sk:
+        sk.settimeout(1.0)
+        if sk.connect_ex((host, port)) == 0:
+            print(f"❌ {host}:{port} 已被占用 —— 拒绝校验（API 会由别的进程回答，结论不可信）")
+            return 2
+
+    # 保险 2：清掉内核的 provider 缓存。cache.db 会把上一轮解析结果连 updatedAt 一起带过来，
+    # 可能掩盖文件改动（变异检验会被缓存骗过）。
+    for stale in ROOT.glob("*.db"):
+        stale.unlink()
+        print(f"已清缓存：{stale.name}")
+
     print(f"启动内核：{args.mihomo}")
     proc = subprocess.Popen(
         [args.mihomo, "-d", str(ROOT), "-f", str(CONFIG)],
@@ -80,19 +96,33 @@ def main() -> int:
             print(f"❌ {args.timeout}s 内未能连上内核 API {API}")
             return 1
 
-        # mihomo 的 /providers/rules 返回形状随版本变过：
-        #   {"providers": {"<name>": {...}}}  或  {"providers": [{...}]}  或  {"<name>": {...}}
-        # 两种都归一成一个 {name: info} 字典，别假定是数组。
-        raw = providers.get("providers", providers) if isinstance(providers, dict) else providers
-        if isinstance(raw, dict):
-            got = {}
-            for name, info in raw.items():
-                if isinstance(info, dict):
-                    got[name] = {"name": name, **info}
-                else:
-                    got[name] = {"name": name, "ruleCount": info}
-        else:
-            got = {p["name"]: p for p in raw}
+        def normalize(resp):
+            """归一成 {name: info}；mihomo 的形状随版本变过。"""
+            raw = resp.get("providers", resp) if isinstance(resp, dict) else resp
+            if isinstance(raw, dict):
+                out = {}
+                for name, info in raw.items():
+                    out[name] = {"name": name, **info} if isinstance(info, dict) \
+                        else {"name": name, "ruleCount": info}
+                return out
+            return {x["name"]: x for x in raw}
+
+        # ⚠️ type: file 的 rule-provider 是**异步加载**的：API 一就绪就查会拿到
+        #    ruleCount=0 / updatedAt=0001-01-01（CI 上实测踩到，本地磁盘快才没暴露）。
+        #    所以必须轮询，直到条数对齐或超时 —— 不能只查一次。
+        got = normalize(providers)
+        wait_deadline = time.time() + args.timeout
+        while time.time() < wait_deadline:
+            aligned = all(
+                got.get(n, {}).get("ruleCount", 0) == m["entries"] for n, m in expected.items()
+            )
+            if aligned and all(got.get(n, {}).get("ruleCount", 0) > 0 for n in expected):
+                break
+            time.sleep(0.5)
+            try:
+                got = normalize(api_get("/providers/rules"))
+            except Exception:
+                pass
 
         print(f"\n内核报告的 rule-provider（{len(got)} 个）：")
         for name, info in sorted(got.items()):

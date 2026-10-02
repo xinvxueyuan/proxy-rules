@@ -43,8 +43,17 @@ echo "Xray 版本: ${XR[0]}"
 curl -fsSL -o "$TMP/xray.zip" "${XR[1]}"
 rm -rf "$TMP/xray" && mkdir -p "$TMP/xray"
 unzip -oq "$TMP/xray.zip" -d "$TMP/xray"
-export XRAY_LOCATION_ASSET="$ROOT/dist/xray"
-DAT="$ROOT/dist/xray/geosite.dat"
+# 资源目录要「自建 dat + 官方 dat 并存」，才与真实部署一致：
+# 自建产物若与官方同名会互相遮蔽，这里名字已分开（self-*.dat），顺便验证不会被遮蔽。
+ASSET="$TMP/asset"
+rm -rf "$ASSET" && mkdir -p "$ASSET"
+cp "$ROOT/dist/xray/"*.dat "$ASSET/"
+curl -fsSL -o "$ASSET/geosite.dat" \
+  "https://github.com/v2fly/domain-list-community/releases/latest/download/dlc.dat"
+curl -fsSL -o "$ASSET/geoip.dat" \
+  "https://github.com/v2fly/geoip/releases/latest/download/geoip.dat"
+export XRAY_LOCATION_ASSET="$ASSET"
+DAT="$ASSET/self-geosite.dat"
 
 echo
 echo "-- 1) 正向：ext: 引用的 .dat 应能加载 --"
@@ -103,7 +112,7 @@ echo
 echo "-- 6) 变异：把一个 rule-provider 清空，必须被抓到 --"
 cp "$ROOT/dist/clash/self-reject.yaml" "$TMP/self-reject.yaml.bak"
 printf 'payload: []\n' > "$ROOT/dist/clash/self-reject.yaml"
-if python3 scripts/verify_clash.py --mihomo "$TMP/mihomo" >/dev/null 2>&1; then
+if python3 scripts/verify_clash.py --mihomo "$TMP/mihomo" --timeout 12 >/dev/null 2>&1; then
   echo "   ❌ 漏过：空规则集仍通过"; FAIL=1
 else
   echo "   ✅ 被抓到"

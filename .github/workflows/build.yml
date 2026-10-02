@@ -66,7 +66,7 @@ jobs:
           cd "$GITHUB_WORKSPACE"
           gh release delete rules-latest --yes --cleanup-tag 2>/dev/null || true
           gh release create rules-latest \
-            dist/xray/geosite.dat dist/xray/geoip.dat \
+            dist/xray/self-geosite.dat dist/xray/self-geoip.dat \
             dist/MANIFEST.sha256 \
             --title "rules $(date -u +%Y-%m-%d)" \
             --notes "自持分流规则自动构建产物（geosite.dat / geoip.dat）。

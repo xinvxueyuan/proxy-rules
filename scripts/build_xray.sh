@@ -20,8 +20,8 @@ fi
 ( cd "$DLC_DIR" && go run ./ \
     --datapath="$ROOT/data/domains" \
     --outputdir="$ROOT/dist/xray" \
-    --outputname=geosite.dat )
-ls -l dist/xray/geosite.dat
+    --outputname=self-geosite.dat )
+ls -l dist/xray/self-geosite.dat
 
 echo
 echo "== 构建 geoip.dat（geoip）=="
@@ -30,11 +30,11 @@ if ! command -v geoip >/dev/null 2>&1; then
   export PATH="$PATH:$(go env GOPATH)/bin"
 fi
 geoip -c scripts/geoip.config.json
-ls -l dist/xray/geoip.dat
+ls -l dist/xray/self-geoip.dat
 
 echo
 echo "== 产物校验（非空 + sha256）=="
-for f in dist/xray/geosite.dat dist/xray/geoip.dat; do
+for f in dist/xray/self-geosite.dat dist/xray/self-geoip.dat; do
   size=$(stat -c%s "$f" 2>/dev/null || stat -f%z "$f")
   if [ "$size" -lt 50 ]; then
     echo "  ❌ $f 过小（$size 字节），构建可能失败"; exit 1
