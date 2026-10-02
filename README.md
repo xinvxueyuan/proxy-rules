@@ -1,54 +1,61 @@
 # proxy-rules
 
-自用分流规则仓。**一份自持数据，编译成 Clash/mihomo 与 Xray 两种内核的格式**，定时自动构建发布。
+自用分流规则仓。**一份组装结果，编译成 Clash/mihomo 与 Xray 两种内核的格式**，定时自动构建发布。
 
-## 分流模型：国内直连，其余走代理兜底
+## 分流模型
 
 ```
-拦截广告/跟踪 ──────────► REJECT
-强制代理（覆盖用） ─────► PROXY
-国内域名 ──────────────► DIRECT
-国内 IP ───────────────► DIRECT
-其余一切 ──────────────► PROXY        ← 兜底
+商业广告 / 追踪 ──► REJECT      （advert.com：通用广告网络 ∪ 下列各生态子组）
+中文互联网追踪 ──► REJECT      （advert.cn）
+自持强制代理 ───► PROXY        （self-proxy，用来覆盖下面两条的误判）
+国内域名 ──────► DIRECT        （site.cn，约 11.1 万条）
+国内 IP ───────► DIRECT        （self-direct-ip + geoip:cn）
+其余一切 ──────► PROXY         ← 兜底
 ```
 
-- **「国内直连」那份名单不是手写的**，而是从上游拉取的 **11 万条**（见「上游来源」），
-  覆盖足够全，长尾国内站不会漏。
-- **兜底是代理**，所以「没被任何规则命中」= 走代理。这意味着：
+- **兜底是代理**，「没被任何规则命中」= 走代理。所以：
 
   | 情况 | 后果 | 怎么管 |
   |---|---|---|
   | 国内站漏在名单外 | 走代理（能用，稍慢） | 补进 `data/domains/self-direct` |
   | 国外站误在名单内 | 走直连（可能连不上） | 补进 `data/domains/self-proxy` 覆盖 |
+  | 误拦了要用的域名 | 打不开 | 删掉对应组里的条目，或另引白名单组 |
 
-- 自持规则（`data/domains/self-*`）**永远优先于上游名单**，就是用来做上面两种修正的。
+- `data/domains/self-*` 是**手写覆盖层**，永远优先于上游名单。
+
+## 组一览
+
+| tag | Clash 文件 | 条数 | 含义 | 来源 |
+|---|---|---|---|---|
+| `site.cn` | `site.cn.yaml` | ~111,300 | **国内域名直连** | 上游（Loyalsoldier direct） |
+| `advert.com` | `advert.com.yaml` | ~50,990 | **商业广告**（通用广告网络 ∪ 下面 6 个子组） | 上游分类 + 手工补充 |
+| `advert.gg` | `advert.gg.yaml` | 45 | 谷歌隐私与广告 | 上游分类 + 手工补充 |
+| `advert.ms` | `advert.ms.yaml` | 396 | 微软隐私与广告 | 上游分类 + 设备遥测表 |
+| `advert.fb` | `advert.fb.yaml` | 6 | Meta（Facebook/Instagram/WhatsApp） | 上游分类 |
+| `advert.x` | `advert.x.yaml` | 10 | 推特（X）广告与分析 | 手工（公共列表无源） |
+| `advert.tg` | `advert.tg.yaml` | 3 | Telegram 推广与统计 | 手工（公共列表无源） |
+| `advert.org` | `advert.org.yaml` | 1 | 公益 / 非盈利广告 | 手工（公共列表无源） |
+| `advert.cn` | `advert.cn.yaml` | ~1,740 | **中文互联网隐私与追踪** | 上游分类 + 国内遥测表 + 手工 |
+| `self-direct` | `self-direct.yaml` | 38 | 手写直连补充 | 自持 |
+| `self-proxy` | `self-proxy.yaml` | 83 | 手写强制代理（**覆盖**上面的误判） | 自持 |
+| `self-direct-ip` | `self-direct-ip.yaml` | 9 | 直连 IP（国内公共 DNS） | 自持 |
+
+> ⚠️ **`advert.cn` 不在 `advert.com` 的聚合里**（按你的原始定义：`advert.com` 只并入
+> `advert.org/gg/ms/fb/x/tg`）。所以客户端要拦全广告与追踪，**两条都要引**：
+> `advert.com` + `advert.cn`。
 
 ## 产物与获取地址
 
 | 产物 | 用途 | 地址 |
 |---|---|---|
-| `self-geosite.dat` | Xray 域名规则集（`ext:self-geosite.dat:<tag>`） | `https://github.com/xinvxueyuan/proxy-rules/releases/latest/download/self-geosite.dat` |
-| `self-geoip.dat` | Xray IP 规则集（`ext:self-geoip.dat:<tag>`） | `https://github.com/xinvxueyuan/proxy-rules/releases/latest/download/self-geoip.dat` |
-| `clash/*.yaml` | mihomo rule-provider | `https://raw.githubusercontent.com/xinvxueyuan/proxy-rules/dist/clash/<name>.yaml` |
-| `MANIFEST.json` | 每个产物的 behavior / 条数 / sha256 | `https://raw.githubusercontent.com/xinvxueyuan/proxy-rules/dist/clash/MANIFEST.json` |
-| `PROVENANCE.json` | 上游来源 / sha256 / 条数 / 抓取时间 | `https://github.com/xinvxueyuan/proxy-rules/releases/latest/download/PROVENANCE.json` |
+| `self-geosite.dat` | Xray 域名规则集 | `https://github.com/xinvxueyuan/proxy-rules/releases/latest/download/self-geosite.dat` |
+| `self-geoip.dat` | Xray IP 规则集 | `https://github.com/xinvxueyuan/proxy-rules/releases/latest/download/self-geoip.dat` |
+| `clash/*.yaml` | mihomo rule-provider | `https://raw.githubusercontent.com/xinvxueyuan/proxy-rules/dist/clash/<tag>.yaml` |
+| `MANIFEST.json` | 每个产物的 behavior / 条数 / sha256 | `.../dist/clash/MANIFEST.json` |
+| `PROVENANCE.json` | 上游来源 / sha256 / 条数 / 分类明细 | `https://github.com/xinvxueyuan/proxy-rules/releases/latest/download/PROVENANCE.json` |
 
-> 产物在 **`dist` 分支** + **Release**，**不在 `main`**。原因：产物每天变（上游 11 万条），
-> 若提交进 main，每天 +2.8MB、一年约 1GB，会把仓库历史撑爆。`dist` 分支每次构建**单快照强推**，
-> 历史永远只有 1 个提交。
-
-### tag / 文件名一览
-
-| tag（Xray） | 文件（Clash） | behavior | 条数 | 含义 |
-|---|---|---|---|---|
-| `china-direct` | `china-direct.yaml` | `domain` | ~111,000 | **国内域名直连**（上游拉取） |
-| `self-direct` | `self-direct.yaml` | `domain` | 38 | 自持直连补充 |
-| `self-proxy` | `self-proxy.yaml` | `domain` | 83 | 自持强制代理（**覆盖**上游名单） |
-| `self-reject` | `self-reject.yaml` | `domain` | 61 | 广告 / 跟踪，拒掉 |
-| `self-direct` | `self-direct-ip.yaml` | `ipcidr` | 9 | 自持直连 IP（国内公共 DNS 等） |
-
-> Xray 侧域名与 IP 是两个维度、**tag 可同名并存**（`ext:self-geosite.dat:self-direct`
-> 与 `ext:self-geoip.dat:self-direct`）；Clash 侧要拆成两个文件（behavior 不同）。
+> 产物在 **`dist` 分支** + **Release**，**不在 `main`**：产物每天变（几 MB），提交进 main
+> 会把历史撑爆。`dist` 分支每次构建**单快照强推**，历史永远只有 1 个提交。
 
 ## 客户端配置
 
@@ -56,24 +63,30 @@
 
 ```yaml
 rule-providers:
-  self-reject:
+  advert.com:
     type: http
     behavior: domain
     format: yaml
     interval: 86400
-    url: https://raw.githubusercontent.com/xinvxueyuan/proxy-rules/dist/clash/self-reject.yaml
+    url: https://raw.githubusercontent.com/xinvxueyuan/proxy-rules/dist/clash/advert.com.yaml
+  advert.cn:
+    type: http
+    behavior: domain
+    format: yaml
+    interval: 86400
+    url: https://raw.githubusercontent.com/xinvxueyuan/proxy-rules/dist/clash/advert.cn.yaml
   self-proxy:
     type: http
     behavior: domain
     format: yaml
     interval: 86400
     url: https://raw.githubusercontent.com/xinvxueyuan/proxy-rules/dist/clash/self-proxy.yaml
-  china-direct:
+  site.cn:
     type: http
     behavior: domain
     format: yaml
     interval: 86400
-    url: https://raw.githubusercontent.com/xinvxueyuan/proxy-rules/dist/clash/china-direct.yaml
+    url: https://raw.githubusercontent.com/xinvxueyuan/proxy-rules/dist/clash/site.cn.yaml
   self-direct:
     type: http
     behavior: domain
@@ -88,20 +101,21 @@ rule-providers:
     url: https://raw.githubusercontent.com/xinvxueyuan/proxy-rules/dist/clash/self-direct-ip.yaml
 
 rules:
-  - RULE-SET,self-reject,REJECT
-  - RULE-SET,self-proxy,PROXY           # 覆盖上游名单里想走代理的域名
-  - RULE-SET,china-direct,DIRECT
+  - RULE-SET,advert.com,REJECT
+  - RULE-SET,advert.cn,REJECT
+  - RULE-SET,self-proxy,PROXY
+  - RULE-SET,site.cn,DIRECT
   - RULE-SET,self-direct,DIRECT
   - RULE-SET,self-direct-ip,DIRECT,no-resolve
   - GEOIP,CN,DIRECT,no-resolve          # 国内 IP 直连（mihomo 内置，需 geoip 数据）
   - MATCH,PROXY                         # 兜底
 ```
 
-> `GEOIP,CN` 需要 mihomo 的 geoip 数据（Clash Verge 一般自带）。不想依赖它就删掉那行 ——
-> 只靠域名规则也能工作，只是纯 IP 场景（某些 App 直连 IP）会走代理。
+> 只想要粗粒度拦截就把 `advert.com` + `advert.cn` 换成细分的
+> `advert.gg` / `advert.ms` / `advert.fb` / `advert.x` / `advert.tg` / `advert.org`。
 >
 > 国内可达性差的网络里，把 `raw.githubusercontent.com` 换成 jsDelivr：
-> `https://cdn.jsdelivr.net/gh/xinvxueyuan/proxy-rules@dist/clash/<name>.yaml`
+> `https://cdn.jsdelivr.net/gh/xinvxueyuan/proxy-rules@dist/clash/<tag>.yaml`
 
 ### Xray
 
@@ -117,11 +131,11 @@ XRAY_LOCATION_ASSET=/usr/local/share/xray xray run -c /etc/xray/config.json
     "domainStrategy": "IPIfNonMatch",
     "rules": [
       { "type": "field", "outboundTag": "blocked",
-        "domain": ["ext:self-geosite.dat:self-reject"] },
+        "domain": ["ext:self-geosite.dat:advert.com", "ext:self-geosite.dat:advert.cn"] },
       { "type": "field", "outboundTag": "proxy",
         "domain": ["ext:self-geosite.dat:self-proxy"] },
       { "type": "field", "outboundTag": "direct",
-        "domain": ["ext:self-geosite.dat:china-direct", "ext:self-geosite.dat:self-direct"] },
+        "domain": ["ext:self-geosite.dat:site.cn", "ext:self-geosite.dat:self-direct"] },
       { "type": "field", "outboundTag": "direct",
         "ip": ["ext:self-geoip.dat:self-direct", "geoip:private", "geoip:cn"] },
       { "type": "field", "outboundTag": "proxy", "network": "tcp,udp" }
@@ -129,8 +143,6 @@ XRAY_LOCATION_ASSET=/usr/local/share/xray xray run -c /etc/xray/config.json
   }
 }
 ```
-
-最后一条 `network: tcp,udp` 就是**兜底走代理**。
 
 Xray 支持**按 URL 热更新** `.dat`（不用重启、不用手动放文件）：
 
@@ -148,127 +160,127 @@ Xray 支持**按 URL 热更新** `.dat`（不用重启、不用手动放文件�
 }
 ```
 
-### ⚠️ `domain` 与 `ip` 必须拆成两条规则（实测）
+## 三个实测确认的坑（都有决定性证据）
 
-Xray 的一条规则里同时给 `domain` 和 `ip` 时，两者是 **AND** —— 必须同时命中才算命中该规则
-（真 xray 26.9.9 实测：用「域名命中、IP 不命中」的目标探测这条规则，结果落到下一条兜底规则）。
-把「域名直连」与「IP 直连」混写在一条里，这条规则就**永不命中**。
+### 1. 产物不能叫 `geosite.dat` / `geoip.dat`（会遮蔽官方同名文件）
 
-```
-✅ 正确：两条规则
-  { "outboundTag": "direct", "domain": ["ext:self-geosite.dat:china-direct"] }
-  { "outboundTag": "direct", "ip": ["ext:self-geoip.dat:self-direct","geoip:private","geoip:cn"] }
+Xray 的 `geosite:` / `geoip:` 内置引用读的是资源目录里**固定文件名**。自建产物若同名，
+放进资源目录就会把官方那份顶掉，配置里并写的 `geosite:cn`、`geoip:private`、`geoip:cn`
+会全部解析失败（实测报 `illegal ip rule: geoip:private ... EOF`）。所以自建产物带 `self-` 前缀。
 
-❌ 错误：混在一条里 → 永不命中
-  { "outboundTag": "direct",
-    "domain": ["ext:self-geosite.dat:china-direct"],
-    "ip": ["geoip:cn"] }
-```
+### 2. 一条规则里 `domain` 与 `ip` 是 **AND**（必须拆成两条）
 
-（`domain` 数组内部、`ip` 数组内部各自是 OR：任一命中即算该维度命中。）
-
-### ⚠️ 产物为什么不叫 `geosite.dat` / `geoip.dat`
-
-Xray 的 `geosite:` / `geoip:` 内置引用读的是资源目录里**固定文件名**。
-自建产物若用这两个名字，放进资源目录就会**把官方那份顶掉** —— 配置里并写的
-`geosite:cn`、`geoip:private`、`geoip:cn` 会全部解析失败（实测报
-`illegal ip rule: geoip:private ... EOF`）。所以自建产物带 `self-` 前缀，与官方**并存**。
-
-## 编辑规则（唯一入口：`data/`）
+真 xray 26.9.9 实测：用「域名命中、IP 不命中」的目标探测一条同时带 `domain` 与 `ip` 的规则，
+结果落到下一条兜底规则 → 证明是 AND。混写会让整条规则**永不命中**，而 `run -test` 依然通过
+（配置合法），属于最难看出来的失效。
 
 ```
-data/domains/self-*    自持规则，v2fly domain-list 语法（会被提交）
-data/ip/*.txt          自持 IP（会被提交）
-data/upstream/         上游拉取的名单（.gitignore 排除，构建前自动生成）
+✅ { "outboundTag": "direct", "domain": [...] }
+   { "outboundTag": "direct", "ip": [...] }
+❌ { "outboundTag": "direct", "domain": [...], "ip": [...] }   # 永不命中
 ```
 
-`data/domains/self-*` 的语法（与 [domain-list-community](https://github.com/v2fly/domain-list-community) 一致）：
+### 3. tag 名带点可用，但官方 dlc 生成不出来
+
+- **Xray 接受**带点的 tag：`ext:self-geosite.dat:advert.com` 与 `:SITE.CN` 都能用
+  （大小写不敏感），写不存在的 tag 会直接报错（好事：能起来就等于 tag 真存在）。
+- 但官方 [dlc](https://github.com/v2fly/domain-list-community) 的 tag 名校验只允许
+  `[A-Z0-9!-]`、**不含点**（见其 `validateSiteName`），实测报 `invalid list name: "ADVERT.CN"`
+  后直接退出。所以本项目**自己用纯 Python 编码 `geosite.dat` / `geoip.dat`**
+  （`scripts/build_xray_data.py`），顺带去掉了 Go 与 dlc 依赖，并带往返校验（写完立刻反解比对）。
+
+## 编辑规则
+
+```
+data/domains/<tag>     自持列表（手写，进 git）
+data/extra/<tag>       对上游组的手工补充（手写，进 git）
+data/upstream/<tag>    上游拉取并分类的结果（.gitignore，构建时生成）
+build/data/<tag>       三层合并 + 聚合解析后的最终数据（构建中间产物）
+```
+
+**按 tag 合并**：同名的三层会并成一份（去重）。所以「上游打底 + 手工补」不会互相覆盖 ——
+这一点是实测踩坑后加的：早先三层各自出产物时，上游那份会**静默盖掉**手工那份。
+
+`data/domains/self-*` 与 `data/extra/*` 的语法与 [dlc](https://github.com/v2fly/domain-list-community) 一致：
 
 ```
 # 注释
 domain:example.com        # 匹配 example.com 及其所有子域
 full:a.example.com        # 仅精确匹配
 keyword:xxx               # 子串匹配
-regexp:^a.*\.example$     # 正则
+regexp:^a\.example$       # 正则
 include:other-file        # 引用同目录另一文件
 ```
-
-新增一个列表 = 丢一个文件（文件名即 tag），**不用改脚本**。
 
 ⚠️ 三个约定：
 
 1. **`keyword:` / `regexp:` 会让该列表整体改用 Clash `behavior: classical` 输出**
-   （`<name>.classical.yaml`）。构建会打印提示，记得把 rule-provider 的 `behavior` 一起改，
-   否则规则静默不生效。
-2. **`data/ip/` 下不要放空列表**（只有注释也算空）：geoip 工具对零条目输入会直接失败。
-3. **想改「国内直连」那份名单**：不要改 `data/upstream/china-direct`（构建时被覆盖）——
-   要么改 `sources.json` 换上游，要么用 `self-direct` / `self-proxy` 做修正。
+   （`<tag>.classical.yaml`）。构建会打印提示，记得把 rule-provider 的 `behavior` 一起改。
+2. **`data/ip/` 下不要放空列表**（只有注释也算空）。
+3. **想改上游那份名单**：不要改 `data/upstream/*`（构建时被覆盖）——
+   要么改 `sources.json` 换来源/分类规则，要么在 `data/extra/<同名>` 里补。
 
-### 关于 tag 大小写与条数（实测结论）
+### 从上游域名到生态组的分类方式
 
-- **tag 匹配大小写不敏感**：`self-direct` 与 `SELF-DIRECT` 都能用（Xray 26.9.9 实测）。
-- **`ext:` 写不存在的 tag 会直接报错** → 「配置能起来」就等于「tag 真存在」，不会静默失效。
-- **dat 条数可能少于 Clash 条数，但语义等价**：`dlc` 会剪掉被父域覆盖的冗余子域
-  （`data/domains/self-direct` 里的 `weixin.qq.com` 被同列表 `domain:qq.com` 覆盖）。
-  `scripts/verify_consistency.py` 断言「dat 的每条都在 Clash 里」且「只在 Clash 里的每条
-  都被某个父域覆盖」；IP 列表不剪枝，两侧必须完全相等。
+`advert.gg` / `.ms` / `.fb` / `.x` / `.tg` / `.cn` 的成员是**从广告底座里按域名后缀挑出来的**
+（不是「把整个谷歌/微软/腾讯都拦掉」）：底座里只有广告/追踪域，后缀只是用来判断
+「这条属于哪个生态」。例如底座里的 `adservice.google.com` → `advert.gg`；
+`ad.pos.baidu.com` → `advert.cn`。所以**不会**因为 `advert.gg` 就拦掉 `google.com` 本身。
 
-### Clash 侧两种写法的语义（实测）
+分类规则声明在 `sources.json` 的 `groups.<组名>.from_suffixes`，改规则不用改代码。
 
-| payload 写法 | 匹配自身 | 匹配子域 |
+## 数据来源与许可证
+
+声明在 [`sources.json`](sources.json)（机器可读），每次实际用的内容记在产物的 `PROVENANCE.json`。
+
+| 用途 | 来源 | 许可证 | 实际条数 |
+|---|---|---|---|
+| 国内域名直连 | [Loyalsoldier/clash-rules](https://github.com/Loyalsoldier/clash-rules) `direct.txt` | GPL-3.0 | 111,304 |
+| 广告/追踪底座 | [hagezi/dns-blocklists](https://github.com/hagezi/dns-blocklists) `light-onlydomains` | GPL-3.0 | 50,628 |
+| 设备遥测（微软/国内/苹果等） | 同上 `native.*` | GPL-3.0 | 2,713 |
+
+**本仓以 GPL-3.0 发布**（见 [LICENSE](LICENSE)）—— 产物由 GPL-3.0 的上游数据构建。
+
+未采用的候选（含原因）也记在 `sources.json` 的 `catalog` 里：
+
+| 候选 | 条数 | 为什么不用 |
 |---|---|---|
-| `example.com` | ✅ | ❌（精确） |
-| `+.example.com` | ✅ | ✅（后缀） |
-
-所以从上游转换时 `+.x` → dlc `domain:x`、裸 `x` → dlc `full:x`，两边语义严格对应。
-
-## 上游来源与许可证
-
-声明在 [`sources.json`](sources.json)（机器可读），构建前由 `scripts/fetch_upstream.py` 拉取。
-每次实际用的那份内容记在产物的 `PROVENANCE.json`（源 URL + sha256 + 条数 + 抓取时间）。
-
-| 用途 | 来源 | 许可证 |
-|---|---|---|
-| 国内域名直连（~111k） | [Loyalsoldier/clash-rules](https://github.com/Loyalsoldier/clash-rules) `direct.txt` | **GPL-3.0** |
-| 其它候选（记录了未采用的原因） | v2fly / MetaCubeX / felixonmars | 见 `sources.json` |
-
-**本仓因此以 GPL-3.0 发布**（见 [LICENSE](LICENSE)）—— 分发基于 GPL-3.0 数据构建的产物，
-保持同一许可证最省事。
-
-为什么用 11 万条那份而不是 v2fly 的 `geosite:cn`（6,624 条）：后者实测 **88.8% 被前者包含**，
-是精选子集；在「国内直连、其余走代理」模型下，名单不全意味着国内站白白走代理。
-为什么不用 `geosite:geolocation-!cn`（25,023 条「非大陆」）：本模型兜底即代理，不需要反面名单。
-IP 侧未采用上游 `cncidr`：mihomo 有内置 `GEOIP,CN`、Xray 有内置 `geoip:cn`，无需自维。
+| `geosite:cn`（v2fly） | 6,624 | 实测 88.8% 被 site.cn 包含，是精选子集 |
+| `geosite:category-ads-all` | 911 | 分类后生态桶只剩个位数（gg 23 / ms 3 / fb 6 / x 1 / tg 0） |
+| 1Hosts Lite | 202,955 | 约 5.2MB、误杀概率明显更高（生态桶确实厚，但代价大） |
+| hagezi pro / normal | 227,572 / 199,122 | 同上，体积换拦截率的取舍选了 light |
+| Loyalsoldier `cncidr` | 9,649 | mihomo 有内置 `GEOIP,CN`、Xray 有内置 `geoip:cn` |
 
 ## 构建与校验
 
-`.github/workflows/build.yml`（push / 每日 / 手动）：
-
-1. `scripts/fetch_upstream.py` — 拉上游列表，规范成 dlc 语法，写 provenance；
-2. `scripts/build_clash.py` — 生成 `dist/clash/*.yaml` + `MANIFEST.json`；
-3. `scripts/build_xray.sh` — 用官方工具生成 `self-geosite.dat`（[dlc](https://github.com/v2fly/domain-list-community)）
-   与 `self-geoip.dat`（[v2fly/geoip](https://github.com/v2fly/geoip)）；
-4. `scripts/verify.sh` — **用真实内核加载产物**：
-   - Xray 侧 `xray run -test`，把自建 dat 与**官方 dat 一起**放进资源目录
-     （既验证能加载，也验证不遮蔽 `geosite:cn` / `geoip:private`）；
-   - Clash 侧**真启动 mihomo** 并查 `/providers/rules` 的真实 `ruleCount`，与 `MANIFEST.json` 对齐；
-   - 两侧都跑**变异检验**（dat 缺失/损坏、rule-provider 空文件/条数不符必须报错）；
-5. `scripts/verify_consistency.py` — 断言两种格式语义等价（见上文剪枝说明）；
-6. 强推 `dist` 分支 + 发 Release。
-
-> ⚠️ **不要用 `mihomo -t` 当闸门**：它只校验配置语法、**不加载 `type: file` 的 rule-provider** ——
-> 文件写成非法 YAML、甚至直接删掉，它都输出 `test is successful`、退出码 0（实测）。
-> 这就是上面为什么要真启动内核 + 查 API 条数 + 做变异检验。
-
-本地复现：
+本地一键（CI 里是分步执行的，见 `.github/workflows/build.yml`）：
 
 ```bash
-python3 scripts/fetch_upstream.py       # 拉上游（需要网络）
-python3 scripts/build_clash.py          # 纯标准库
-bash scripts/build_xray.sh              # 需要 go（dlc + v2fly/geoip）
-bash scripts/verify.sh                  # 需要 curl / unzip / python3
-python3 scripts/verify_consistency.py   # 需要先有 dist/xray/*.dat
+bash scripts/build.sh                 # fetch → assemble → clash → dat → verify
+SKIP_FETCH=1 SKIP_VERIFY=1 bash scripts/build.sh   # 复用已有上游数据、只出产物
 ```
+
+分步（各脚本也能单独跑）：
+
+```bash
+python3 scripts/fetch_upstream.py     # 1) 拉上游并分类（写 data/upstream + PROVENANCE）
+python3 scripts/assemble_data.py      # 2) 合并三层 + 解析聚合组（写 build/data）
+python3 scripts/build_clash.py        # 3) 出 Clash rule-provider（写 dist/clash）
+python3 scripts/build_xray_data.py    # 4) 出 geosite.dat / geoip.dat（写 dist/xray）
+bash scripts/verify.sh                # 5) 真内核校验 + 变异检验 + 一致性
+```
+
+**校验为什么必须用真实内核**（而不是 `mihomo -t`）：实测 `mihomo -t` 只校验配置语法、
+**不加载 `type: file` 的 rule-provider** —— 文件写成非法 YAML、甚至直接删掉，它都输出
+`test is successful`、退出码 0。所以校验改成**真启动 mihomo 并查 `/providers/rules`
+的 `ruleCount`**（与 `MANIFEST.json` 逐项对齐），Xray 侧跑 `xray run -test` 加载 `ext:`
+引用的 dat，两侧都跑**变异检验**（缺文件/坏内容/空规则集/条数不符必须报错）。
+
+另外两个必做保护：
+
+- **`type: file` 是异步加载的**：API 一就绪就查会拿到 `ruleCount=0`，必须轮询等条数对齐。
+- **启动前检查 API 端口是否被占用**：被残留进程占用时 API 会由它回答，会拿上一轮的好数据
+  把这次校验伪装成通过。
 
 ### `main` 与 `dist` 两个分支
 
@@ -277,20 +289,30 @@ python3 scripts/verify_consistency.py   # 需要先有 dist/xray/*.dat
 | `main` | 只有源码：`data/`、`scripts/`、`verify/`、工作流、文档 | 正常提交 |
 | `dist` | 只有产物：`clash/*.yaml`、`xray/*.dat`、两个 MANIFEST、PROVENANCE | 每次构建**强推**，永远 1 个提交 |
 
-`.github/workflows/cleanup-history.yml`（每月 1 日 + 手动）是**兜底**：把历史上误入 main 的
-产物 / 草稿文件用 `git filter-repo` 清掉并强推。正常情况下不会触发清理（main 本就不提交产物）。
+`.github/workflows/cleanup-history.yml`（每月 1 日 + 手动）是兜底：用 `git filter-repo`
+清掉历史上误入 main 的产物/草稿并强推。正常不触发（main 本就不提交产物）。
+⚠️ 它重写 main 的提交 SHA，跑完本地 clone 需重新拉取。
 
-> ⚠️ 它重写 main 的提交 SHA，跑完本地 clone 需重新拉取。
+## 已知限制
+
+- **`advert.org` 只有 1 条**（`adcouncil.org`）：公共列表里**没有**「公益/非盈利广告」
+  这个类别，纯自持占位，价值有限，嫌碍事就删掉 `data/extra/advert.org`（构建会自动跳过空组）。
+- **`advert.tg` 只有 3 条**（`ads/promote/stats.telegram.org`）：Telegram 没有独立的
+  第三方广告域清单，实测从底座里分类得到 **0 条**。刻意**不含** `telegram.org` / `t.me`
+  本体 —— 那是电报服务与链接域名，拦了会断掉电报。
+- **`advert.x` 只有 10 条**：Twitter 在 v2fly / MetaCubeX 都没有独立广告表。同样刻意不含
+  `twitter.com` / `x.com` / `t.co` 本体（会断掉推特与站外推文链接）。
+- **`advert.fb` 只有 6 条**：底座里 Meta 系的广告域本来就少。
+- **`site.cn` 与 `advert.*` 会有重叠**：国内域名直连表里也可能有广告域（该表由「解析到
+  大陆 IP 的域名」汇总而来）。规则顺序把 REJECT 放在 DIRECT 之前，所以**广告优先被拦**。
 
 ## 内核版本
 
-产物对齐当前最新版：**mihomo v1.19.32**、**Xray v26.9.30**。
+产物对齐当前最新版：**mihomo v1.19.32**、**Xray v26.9.30**（实测环境 Xray 26.9.9 校验通过）。
 
-- Xray 的 `releases/latest` 只指到 `v26.3.27`，新版本走 **pre-release** 通道；
-  CI 取的是「最新一个 release（含 pre-release）」。
-- `ext:` 规则集与 `geodata` 热更新都是较新的能力，太旧的内核请先升级。
+Xray 的 `releases/latest` 只指到 `v26.3.27`，新版本走 **pre-release** 通道；
+CI 取的是「最新一个 release（含 pre-release）」。
 
 ## License
 
-**GPL-3.0**（见 [LICENSE](LICENSE)）。理由：产物由 GPL-3.0 的上游名单构建。
-上游来源与各自许可证见 [`sources.json`](sources.json)。
+**GPL-3.0**（见 [LICENSE](LICENSE)）。上游来源与各自许可证见 [`sources.json`](sources.json)。

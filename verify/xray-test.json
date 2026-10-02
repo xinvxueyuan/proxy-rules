@@ -1,4 +1,5 @@
 {
+  "_comment": "仅用于 CI 校验：用真实 Xray 加载 ext: 引用的自建 dat（名字已与官方 dat 区分，避免遮蔽）。domain 与 ip 必须拆成两条规则：同一条规则里两者是 AND（实测）。",
   "log": { "loglevel": "warning" },
   "inbounds": [
     {
@@ -20,7 +21,12 @@
       {
         "type": "field",
         "outboundTag": "blocked",
-        "domain": ["ext:self-geosite.dat:self-reject"]
+        "domain": ["ext:self-geosite.dat:advert.com"]
+      },
+      {
+        "type": "field",
+        "outboundTag": "blocked",
+        "domain": ["ext:self-geosite.dat:advert.cn"]
       },
       {
         "type": "field",
@@ -28,11 +34,10 @@
         "domain": ["ext:self-geosite.dat:self-proxy"]
       },
       {
-        "_comment": "域名维度与 IP 维度必须拆成两条规则：同一条规则里 domain 与 ip 是 AND（实测），混写会让整条永不命中。",
         "type": "field",
         "outboundTag": "direct",
         "domain": [
-          "ext:self-geosite.dat:china-direct",
+          "ext:self-geosite.dat:site.cn",
           "ext:self-geosite.dat:self-direct"
         ]
       },

@@ -1,0 +1,44 @@
+# advert.com —— 手工补充层（对上游组打底的补充；上游生成物在 data/upstream/，会被构建覆盖）
+# 语法同 dlc domain-list：domain:x = x 及其子域；full:x = 仅精确匹配
+#
+# 通用广告网络 / 受众测量 / 归因追踪（自原 self-reject 迁入；不属任何生态）
+#
+domain:2mdn.net
+domain:aaxads.com
+domain:ad-delivery.net
+domain:ad-srv.net
+domain:adcolony.com
+domain:adform.net
+domain:adjust.com
+domain:adnxs.com
+domain:adroll.com
+domain:adsrvr.org
+domain:appmetrica.yandex.net
+domain:appsflyer.com
+domain:branch.io
+domain:bugsnag.com
+domain:casalemedia.com
+domain:comscore.com
+domain:crazyegg.com
+domain:criteo.com
+domain:criteo.net
+domain:fullstory.com
+domain:hotjar.com
+domain:indexexchange.com
+domain:kochava.com
+domain:moatads.com
+domain:mouseflow.com
+domain:nielsen.com
+domain:openx.net
+domain:outbrain.com
+domain:pubmatic.com
+domain:quantserve.com
+domain:rubiconproject.com
+domain:scorecardresearch.com
+domain:sharethrough.com
+domain:singular.net
+domain:smartadserver.com
+domain:taboola.com
+domain:teads.tv
+domain:tenjin.io
+domain:yieldmo.com

@@ -6,18 +6,46 @@
 #             rule-provider** —— 文件写成非法 YAML、甚至直接删掉，`-t` 都输出
 #             "test is successful" 退出码 0（实测）。拿它当闸门 = 假绿灯。
 #   Xray  侧：xray run -test 加载 ext: 引用的 .dat；并验证「文件缺失/内容损坏
-#             时必须报错」，证明 -test 真的在读文件。
+#             时必须报错」，证明 -test 真的在读文件。资源目录里同时放**官方 dat**，
+#             验证自建产物不会遮蔽 geosite:cn / geoip:private 这类内置引用。
+#
+# 三个本机（Windows / git-bash）的坑，都在下面处理掉了：
+#   1) python 写 stdout 是 CRLF → readarray 会把 \r 带进元素，URL 变成 "...zip\r"；
+#   2) curl / unzip / xray / mihomo 是**原生程序**，不认 MSYS 的 /c/... 路径
+#      （实测 curl -o /c/... 直接报 error 23）。给原生程序的路径统一过 topath；
+#   3) 内核要按平台取对应资产 —— 拿 Linux 版在内核在 Windows 上跑会报
+#      `不是有效的 Win32 应用程序`。所以按 uname 选 windows/linux 构建。
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$ROOT"
+
+topath() { command -v cygpath >/dev/null 2>&1 && cygpath -m "$1" || printf '%s' "$1"; }
+WROOT="$(topath "$ROOT")"
+
 TMP="$ROOT/build/verify"
+WTMP="$WROOT/build/verify"
 mkdir -p "$TMP"
 FAIL=0
 
-# 取仓库最新一个 release（含 pre-release）里匹配指定 asset 的下载地址
-latest_asset() { # $1=repo $2=asset 正则
-  python3 - "$1" "$2" <<'PY'
+case "$(uname -s)" in
+  MINGW*|MSYS*|CYGWIN*)
+    PLAT=windows
+    XR_PAT='^Xray-windows-64\.zip$'  ; XR_BIN=xray.exe
+    MH_PAT='^mihomo-windows-amd64-compatible.*\.zip$' ; MH_BIN=mihomo.exe
+    ;;
+  *)
+    PLAT=linux
+    XR_PAT='^Xray-linux-64\.zip$'    ; XR_BIN=xray
+    MH_PAT='^mihomo-linux-amd64-compatible.*\.gz$'    ; MH_BIN=mihomo
+    ;;
+esac
+echo "平台: $PLAT（内核取对应平台的构建）"
+
+# 取仓库最新一个 release（含 pre-release）里匹配指定 asset 的下载地址，
+# 输出两行：版本号、下载地址（末尾 tr -d '\r' 解决上述 CRLF 问题）。
+latest_asset() {
+  python3 - "$1" "$2" <<'PY' | tr -d '\r'
 import json, re, sys, urllib.request
 repo, pat = sys.argv[1], re.compile(sys.argv[2])
 def get(url):
@@ -37,36 +65,45 @@ sys.exit(f"no asset matching {pat.pattern} in {tag}")
 PY
 }
 
-echo "======== 准备：取 Xray 内核（最新 release，含 pre-release）========"
-readarray -t XR < <(latest_asset "XTLS/Xray-core" '^Xray-linux-64\.zip$')
+echo
+echo "======== 准备：Xray 内核 ========"
+readarray -t XR < <(latest_asset "XTLS/Xray-core" "$XR_PAT")
 echo "Xray 版本: ${XR[0]}"
-curl -fsSL -o "$TMP/xray.zip" "${XR[1]}"
+curl -fsSL -o "$WTMP/xray.zip" "${XR[1]}"
 rm -rf "$TMP/xray" && mkdir -p "$TMP/xray"
-unzip -oq "$TMP/xray.zip" -d "$TMP/xray"
-# 资源目录要「自建 dat + 官方 dat 并存」，才与真实部署一致：
-# 自建产物若与官方同名会互相遮蔽，这里名字已分开（self-*.dat），顺便验证不会被遮蔽。
-ASSET="$TMP/asset"
+unzip -oq "$WTMP/xray.zip" -d "$WTMP/xray"
+XR_FOUND="$(find "$TMP/xray" -type f -name "xray*" 2>/dev/null | head -1)"
+if [ -z "$XR_FOUND" ]; then
+  echo "   ❌ 未在解压目录里找到 xray 可执行文件"; ls -l "$TMP/xray" | sed 's/^/      /'; exit 1
+fi
+chmod +x "$XR_FOUND" 2>/dev/null || true
+XBIN="$(topath "$XR_FOUND")"
+
+# 资源目录：自建 dat + 官方 dat 并存（与真实部署一致）
+ASSET="$ROOT/build/verify/asset"
+WASSET="$WTMP/asset"
 rm -rf "$ASSET" && mkdir -p "$ASSET"
 cp "$ROOT/dist/xray/"*.dat "$ASSET/"
-curl -fsSL -o "$ASSET/geosite.dat" \
+curl -fsSL -o "$WASSET/geosite.dat" \
   "https://github.com/v2fly/domain-list-community/releases/latest/download/dlc.dat"
-curl -fsSL -o "$ASSET/geoip.dat" \
+curl -fsSL -o "$WASSET/geoip.dat" \
   "https://github.com/v2fly/geoip/releases/latest/download/geoip.dat"
-export XRAY_LOCATION_ASSET="$ASSET"
+export XRAY_LOCATION_ASSET="$WASSET"
 DAT="$ASSET/self-geosite.dat"
+echo "资源目录: $(ls -1 "$ASSET" | tr '\n' ' ')"
 
 echo
-echo "-- 1) 正向：ext: 引用的 .dat 应能加载 --"
-if "$TMP/xray/xray" run -test -c "$ROOT/verify/xray-test.json"; then
+echo "-- 1) 正向：ext: 引用的 .dat 应能加载（且与官方 dat 并存不遮蔽）--"
+if "$XBIN" run -test -c "$WROOT/verify/xray-test.json"; then
   echo "   ✅ xray 成功加载 ext: 规则集"
 else
   echo "   ❌ xray 加载失败"; FAIL=1
 fi
 
 echo
-echo "-- 2) 变异：把 geosite.dat 移走，必须报错 --"
+echo "-- 2) 变异：把自建 geosite.dat 移走，必须报错 --"
 mv "$DAT" "$TMP/geosite.dat.hold"
-if "$TMP/xray/xray" run -test -c "$ROOT/verify/xray-test.json" >/dev/null 2>&1; then
+if "$XBIN" run -test -c "$WROOT/verify/xray-test.json" >/dev/null 2>&1; then
   echo "   ❌ 漏过：dat 不存在仍通过，校验有盲区"; FAIL=1
 else
   echo "   ✅ 被抓到"
@@ -74,10 +111,10 @@ fi
 mv "$TMP/geosite.dat.hold" "$DAT"
 
 echo
-echo "-- 3) 变异：破坏 geosite.dat 内容，必须报错 --"
+echo "-- 3) 变异：破坏自建 geosite.dat 内容，必须报错 --"
 cp "$DAT" "$TMP/geosite.dat.bak"
 printf 'not a protobuf at all, garbage bytes to break parsing' > "$DAT"
-if "$TMP/xray/xray" run -test -c "$ROOT/verify/xray-test.json" >/dev/null 2>&1; then
+if "$XBIN" run -test -c "$WROOT/verify/xray-test.json" >/dev/null 2>&1; then
   echo "   ❌ 漏过：内容损坏仍通过"; FAIL=1
 else
   echo "   ✅ 被抓到"
@@ -86,23 +123,38 @@ cp "$TMP/geosite.dat.bak" "$DAT"
 
 echo
 echo "-- 4) 恢复后复测 --"
-if "$TMP/xray/xray" run -test -c "$ROOT/verify/xray-test.json" >/dev/null 2>&1; then
+if "$XBIN" run -test -c "$WROOT/verify/xray-test.json" >/dev/null 2>&1; then
   echo "   ✅ 恢复后正常"
 else
   echo "   ❌ 恢复后仍失败"; FAIL=1
 fi
 
 echo
-echo "======== 准备：取 mihomo 内核 ========"
-readarray -t MH < <(latest_asset "MetaCubeX/mihomo" '^mihomo-linux-amd64.*\.gz$')
+echo "======== 准备：mihomo 内核 ========"
+readarray -t MH < <(latest_asset "MetaCubeX/mihomo" "$MH_PAT")
 echo "mihomo 版本: ${MH[0]}"
-curl -fsSL -o "$TMP/mihomo.gz" "${MH[1]}"
-gunzip -f "$TMP/mihomo.gz"
-chmod +x "$TMP/mihomo"
+if [ "$PLAT" = windows ]; then
+  curl -fsSL -o "$WTMP/mihomo.zip" "${MH[1]}"
+  rm -rf "$TMP/mihomo-dir" && mkdir -p "$TMP/mihomo-dir"
+  unzip -oq "$WTMP/mihomo.zip" -d "$WTMP/mihomo-dir"
+else
+  curl -fsSL -o "$WTMP/mihomo.gz" "${MH[1]}"
+  gunzip -f "$WTMP/mihomo.gz"
+fi
+# 资产名带版本后缀（如 mihomo-windows-amd64-compatible-alpha-9f053c4.exe），
+# 所以按通配找、并把可执行位置显式确定下来；找不到就直接失败，
+# **不要**回退到别的文件（曾回退到残留的 Linux 二进制 → WinError 193，误导排查方向）。
+MH_FOUND="$(find "$TMP/mihomo-dir" -type f -name "mihomo*" 2>/dev/null | head -1)"
+if [ -z "$MH_FOUND" ]; then
+  echo "   ❌ 未在解压目录里找到 mihomo 可执行文件"; ls -l "$TMP/mihomo-dir" | sed 's/^/      /'; exit 1
+fi
+chmod +x "$MH_FOUND" 2>/dev/null || true
+MBIN="$(topath "$MH_FOUND")"
+echo "   mihomo 可执行: $(basename "$MH_FOUND")"
 
 echo
 echo "-- 5) 真启动内核 + 查 rule-provider 真实条数 --"
-if python3 scripts/verify_clash.py --mihomo "$TMP/mihomo"; then
+if python3 scripts/verify_clash.py --mihomo "$MBIN" --timeout 60; then
   echo "   ✅ mihomo 真实加载校验通过"
 else
   echo "   ❌ mihomo 校验失败"; FAIL=1
@@ -110,17 +162,17 @@ fi
 
 echo
 echo "-- 6) 变异：把一个 rule-provider 清空，必须被抓到 --"
-cp "$ROOT/dist/clash/self-reject.yaml" "$TMP/self-reject.yaml.bak"
-printf 'payload: []\n' > "$ROOT/dist/clash/self-reject.yaml"
-if python3 scripts/verify_clash.py --mihomo "$TMP/mihomo" --timeout 12 >/dev/null 2>&1; then
+cp "$ROOT/dist/clash/advert.gg.yaml" "$TMP/advert.gg.yaml.bak"
+printf 'payload: []\n' > "$ROOT/dist/clash/advert.gg.yaml"
+if python3 scripts/verify_clash.py --mihomo "$MBIN" --timeout 15 >/dev/null 2>&1; then
   echo "   ❌ 漏过：空规则集仍通过"; FAIL=1
 else
   echo "   ✅ 被抓到"
 fi
-cp "$TMP/self-reject.yaml.bak" "$ROOT/dist/clash/self-reject.yaml"
+cp "$TMP/advert.gg.yaml.bak" "$ROOT/dist/clash/advert.gg.yaml"
 
 echo
-echo "-- 7) 一致性：两种格式必须语义等价（同一份自持数据）--"
+echo "-- 7) 一致性：两种格式必须语义等价（同一份组装结果）--"
 if python3 scripts/verify_consistency.py; then
   echo "   ✅ 一致性校验通过"
 else

@@ -1,0 +1,8 @@
+# advert.org —— 手工补充层（对上游组打底的补充；上游生成物在 data/upstream/，会被构建覆盖）
+# 语法同 dlc domain-list：domain:x = x 及其子域；full:x = 仅精确匹配
+#
+# 公益 / 非盈利广告。公共列表里**没有**这一类别（无任何现成来源），本组为纯自持。
+# 目前只收美国公益广告机构 Ad Council 的分发域（实探 adcouncil.org 可解析）。
+# 你觉得没价值就删掉这个文件，构建时会自动跳过空组。
+#
+domain:adcouncil.org

@@ -1,24 +1,28 @@
 #!/usr/bin/env python3
-"""拉取 sources.json 里声明的上游域名列表，规范化成 dlc domain-list 语法。
+"""按 sources.json 拉取上游规则并**按生态分类**，生成各组的数据文件。
 
 为什么要有这一步：
-    「国内域名直连」需要一份覆盖足够全的国内域名表（约 11 万条），
-    手工维护不现实，所以从上游拉取并**规范成与自持规则同一种语法**，
-    这样 Clash 与 Xray 两侧的编译脚本都不需要知道上游格式。
+  「国内直连」需要约 11 万条国内域名；「广告拦截」需要按生态（谷歌/微软/Meta/推特/Telegram/
+  中文互联网）分开的组。手工维护不现实，所以从上游拉取、规范成与自持规则同一种语法
+  （dlc domain-list），这样 Clash 与 Xray 两侧的编译脚本都不需要知道上游格式。
+
+分类模型（声明在 sources.json 的 groups 里）：
+  - from_suffixes   从底座（advert.base）里按域名后缀挑本组成员
+  - from_substrings 同上，但按子串匹配（用于 "goog"、"firebase" 这类）
+  - plus            直接并入某个 internal 来源的全部条目（如 native.winoffice → advert.ms）
+  - rest_of         底座里**没被任何组挑走**的剩余（= 通用广告网络）
+  - union_of        聚合组（advert.com = 通用 ∪ 各生态子组）
 
 关键设计：
-  - 抓下来的文件写进 data/domains/<tag>，并被 .gitignore 排除
-    → 仓库里不存 2MB 的每日变动数据，只有产物（在 dist 分支与 Release）。
-  - 规范化时保留「精确 / 后缀」的区别（实测确认过语义）：
-        Clash '+.x'  = 该域及子域  →  dlc 'domain:x'
-        Clash 'x'    = 仅精确匹配  →  dlc 'full:x'
-    mihomo 实测：bare 写法不匹配子域、'+.' 写法匹配自身与子域。
-  - 记录 provenance（源 URL / sha256 / 条数 / 时间）到 dist/PROVENANCE.json，
-    让每个产物都能追溯回上游那一刻的内容。
+  - 抓下来的文件写进 data/upstream/<tag>，被 .gitignore 排除
+    → 仓库里不存每日变动的数据，只有产物（在 dist 分支与 Release）。
+  - 手工补充不写这里，写 data/extra/<tag>（进 git）；构建时按 tag 合并三个目录，
+    这样「上游打底 + 手工补」不会互相覆盖。
+  - 记录 provenance（源 URL / sha256 / 条数 / 分类明细）到 dist/PROVENANCE.json。
 
 用法：
-    python3 scripts/fetch_upstream.py            # 按 sources.json 全量拉取
-    python3 scripts/fetch_upstream.py --check    # 只检查声明与本地文件是否齐备
+    python3 scripts/fetch_upstream.py            # 全量拉取并分类
+    python3 scripts/fetch_upstream.py --check    # 只检查本地是否齐备，不联网
 """
 
 from __future__ import annotations
@@ -33,8 +37,6 @@ import urllib.request
 
 ROOT = pathlib.Path(__file__).resolve().parent.parent
 SOURCES = ROOT / "sources.json"
-# 上游数据独立成目录（整目录被 .gitignore 排除）：与自持规则分开放，
-# 既避免误把 2MB 的每日变动文件提交进 main，也让「哪些是自有的、哪些是拉来的」一目了然。
 UPSTREAM_DIR = ROOT / "data" / "upstream"
 PROVENANCE = ROOT / "dist" / "PROVENANCE.json"
 UA = "proxy-rules-fetch/1.0 (+https://github.com/xinvxueyuan/proxy-rules)"
@@ -50,15 +52,19 @@ def download(url: str, timeout: int = 180) -> bytes:
         return r.read()
 
 
-# ── 各上游格式 → dlc domain-list 语法 ───────────────────────────────────
 def parse_clash_domain(text: str) -> tuple[list[str], list[str], dict]:
-    """Loyalsoldier 的 direct.txt 之类：每行 `- 'x'` 或 `- '+.x'`（可能带缩进/引号）。"""
+    """Loyalsoldier 的 direct.txt 之类：每行 `- 'x'` / `- '+.x'`（可能带缩进与引号）。
+
+    语义（实测确认）：
+        '+.x' = 该域及子域 → dlc 'domain:x'
+        'x'   = 仅精确匹配 → dlc 'full:x'
+    """
     suffix: list[str] = []
     exact: list[str] = []
-    stats = {"bare": 0, "plus": 0, "skipped": 0}
+    stats = {"plus": 0, "bare": 0, "skipped": 0}
     for raw in text.splitlines():
         s = raw.strip()
-        if not s or s.startswith("#") or s in ("payload:",):
+        if not s or s.startswith("#") or s == "payload:":
             continue
         if s.startswith("- "):
             s = s[2:].strip()
@@ -66,14 +72,10 @@ def parse_clash_domain(text: str) -> tuple[list[str], list[str], dict]:
         if not s:
             continue
         s = s.lower()
-        if s.startswith("+."):
-            suffix.append(s[2:])
-            stats["plus"] += 1
-        elif s.startswith("*."):
+        if s.startswith(("+.", "*.")):
             suffix.append(s[2:])
             stats["plus"] += 1
         elif any(c in s for c in ":,/"):
-            # DOMAIN-KEYWORD,xxx / IP-CIDR 之类本仓不处理的形态
             stats["skipped"] += 1
         elif "*" in s or "?" in s:
             stats["skipped"] += 1
@@ -83,21 +85,61 @@ def parse_clash_domain(text: str) -> tuple[list[str], list[str], dict]:
     return suffix, exact, stats
 
 
-PARSERS = {"clash-domain": parse_clash_domain}
+def parse_domains(text: str) -> tuple[list[str], list[str], dict]:
+    """纯域名 / hosts 表（hagezi 的 *-onlydomains.txt、1Hosts 等）。
+
+    这些表的语义是「拦该域及其子域」，所以一律按后缀（dlc domain:）处理。
+    兼容 hosts 格式（`0.0.0.0 domain`）与通配格式（`*.domain`）。
+    """
+    suffix: list[str] = []
+    stats = {"domains": 0, "skipped": 0}
+    for raw in text.splitlines():
+        s = raw.strip()
+        if not s or s.startswith(("#", "!")):
+            continue
+        parts = s.split()
+        # hosts 格式：首列是 IP；其它格式：只有一列（或末列是域名）
+        if len(parts) > 1 and (parts[0][0].isdigit() or ":" in parts[0]):
+            cand = parts[1]
+        else:
+            cand = parts[0]
+        cand = cand.strip().lower().rstrip(".")
+        if cand.startswith(("*", "+")):
+            cand = cand.lstrip("*+").lstrip(".")
+        if not cand or cand in ("localhost", "localhost.localdomain", "local", "broadcasthost",
+                                "0.0.0.0", "127.0.0.1", "::1", "ip6-localhost", "ip6-loopback"):
+            stats["skipped"] += 1
+            continue
+        if "/" in cand or ":" in cand or "*" in cand or not cand.count("."):
+            stats["skipped"] += 1
+            continue
+        suffix.append(cand)
+        stats["domains"] += 1
+    return suffix, [], stats
 
 
-def to_domain_list(suffix: list[str], exact: list[str]) -> tuple[str, dict]:
-    """输出 dlc 语法文本；后缀用 domain:，精确用 full:；排序去重保证可复现。"""
+PARSERS = {"clash-domain": parse_clash_domain, "domains": parse_domains}
+
+
+def matches(domain: str, suffixes: list[str], substrings: list[str]) -> bool:
+    for p in suffixes:
+        if domain == p or domain.endswith("." + p):
+            return True
+    for k in substrings:
+        if k in domain:
+            return True
+    return False
+
+
+def write_domain_list(path: pathlib.Path, suffix: list[str], exact: list[str],
+                      header_lines: list[str]) -> dict:
+    """输出 dlc 语法：后缀用 domain:、精确用 full:（排序去重，保证可复现）"""
     sd = sorted(set(suffix))
-    ed = sorted(set(exact) - set(sd))     # 已是后缀的不必再写精确
+    ed = sorted(set(exact) - set(sd))
     body = [f"domain:{d}" for d in sd] + [f"full:{d}" for d in ed]
-    header = (
-        f"# ⚠️ 本文件由 scripts/fetch_upstream.py 自动生成，**请勿手改**\n"
-        f"# 来源与许可证见 sources.json；要改规则请改 data/domains/self-*。\n"
-        f"# domain: 后缀匹配（含子域）{len(sd)} 条；full: 精确匹配 {len(ed)} 条\n"
-    )
-    return header + "\n".join(body) + "\n", {"suffix": len(sd), "exact": len(ed),
-                                             "total": len(sd) + len(ed)}
+    text = "\n".join(header_lines) + "\n" + "\n".join(body) + "\n"
+    path.write_text(text, encoding="utf-8", newline="\n")
+    return {"suffix": len(sd), "exact": len(ed), "total": len(sd) + len(ed)}
 
 
 def main() -> int:
@@ -107,19 +149,33 @@ def main() -> int:
 
     src = load_sources()
     upstream = src.get("upstream", [])
-    if not upstream:
-        print("sources.json 里没有 upstream 声明")
-        return 0
+    groups_cfg = {k: v for k, v in (src.get("groups") or {}).items() if not k.startswith("_")}
 
     if args.check:
+        expected = [u["tag"] for u in upstream if not u.get("internal")]
+        for gname, g in groups_cfg.items():
+            if g.get("from_suffixes") or g.get("from_substrings") or g.get("plus") \
+                    or g.get("union_of") or g.get("rest_of"):
+                expected.append(gname)
         missing = []
-        for item in upstream:
-            p = UPSTREAM_DIR / item["tag"]
-            n = sum(1 for _ in p.open(encoding="utf-8")) if p.exists() else 0
-            state = f"{n} 行" if p.exists() else "缺失"
-            print(f"  {item['tag']:<16} {state}")
-            if not p.exists() or n < 10:
-                missing.append(item["tag"])
+        manual = [ROOT / "data" / "domains", ROOT / "data" / "extra"]
+        for tag in sorted(set(expected)):
+            n_up = 0
+            up = UPSTREAM_DIR / tag
+            if up.exists():
+                n_up = sum(1 for ln in up.read_text(encoding="utf-8").splitlines()
+                           if ln.strip() and not ln.strip().startswith("#"))
+            n_manual = 0
+            for d in manual:
+                f = d / tag
+                if f.exists():
+                    n_manual += sum(1 for ln in f.read_text(encoding="utf-8").splitlines()
+                                    if ln.strip() and not ln.strip().startswith("#"))
+            total = n_up + n_manual
+            note = f"上游 {n_up} + 手工 {n_manual}" if n_up or n_manual else "缺失"
+            print(f"  {tag:<18} {total:>7} 条  （{note}）")
+            if total < 1:
+                missing.append(tag)
         if missing:
             print(f"\n❌ 缺失/异常：{missing}（先跑 scripts/fetch_upstream.py）")
             return 1
@@ -127,16 +183,18 @@ def main() -> int:
         return 0
 
     UPSTREAM_DIR.mkdir(parents=True, exist_ok=True)
-    record = {"fetched_by": "scripts/fetch_upstream.py", "sources": []}
+    record: dict = {"fetched_by": "scripts/fetch_upstream.py", "sources": [], "groups": {}}
     problems: list[str] = []
 
+    # ── 1. 拉取所有来源 ────────────────────────────────────────────────
+    fetched: dict[str, dict] = {}
     for item in upstream:
         tag, url, fmt = item["tag"], item["url"], item["format"]
         parser = PARSERS.get(fmt)
         if parser is None:
             print(f"❌ {tag}: 不支持的 format={fmt}")
             return 2
-        print(f"== {tag} ==")
+        print(f"== 拉取 {tag} ==")
         print(f"   来源: {url}")
         try:
             raw = download(url)
@@ -144,38 +202,95 @@ def main() -> int:
             print(f"   ❌ 下载失败：{e}")
             problems.append(f"{tag}: {e}")
             continue
-
         suffix, exact, stats = parser(raw.decode("utf-8", "replace"))
-        text, counts = to_domain_list(suffix, exact)
-        out = UPSTREAM_DIR / tag
-        out.write_text(text, encoding="utf-8", newline="\n")
-
-        sha_raw = hashlib.sha256(raw).hexdigest()
-        sha_norm = hashlib.sha256(text.encode("utf-8")).hexdigest()
-        print(f"   原始 {len(raw):,} 字节 sha256={sha_raw[:16]}")
-        print(f"   {stats}")
-        print(f"   规范化 {counts} → {out.relative_to(ROOT)} ({len(text):,} 字节)")
+        fetched[tag] = {"suffix": suffix, "exact": exact, "stats": stats}
+        sha = hashlib.sha256(raw).hexdigest()
+        print(f"   {len(raw):,} 字节 sha256={sha[:16]}  {stats}")
         record["sources"].append({
-            "tag": tag,
-            "url": url,
-            "format": fmt,
-            "repo": item.get("repo"),
-            "license": item.get("license"),
-            "purpose": item.get("purpose"),
-            "raw_bytes": len(raw),
-            "raw_sha256": sha_raw,
-            "normalized_sha256": sha_norm,
-            "entries": counts,
-            "parse_stats": stats,
+            "tag": tag, "url": url, "format": fmt, "repo": item.get("repo"),
+            "license": item.get("license"), "purpose": item.get("purpose"),
+            "internal": bool(item.get("internal")), "raw_bytes": len(raw), "raw_sha256": sha,
+            "entries": {"suffix": len(set(suffix)), "exact": len(set(exact))},
         })
 
+    if problems:
+        print("\n❌ 有来源拉取失败，拒绝继续（否则会产出缺内容的组）：")
+        for p in problems:
+            print(f"   - {p}")
+        return 1
+
+    # ── 2. 非 internal 来源直接出产物 ─────────────────────────────────
+    for item in upstream:
+        tag = item["tag"]
+        if item.get("internal") or tag not in fetched:
+            continue
+        f = fetched[tag]
+        counts = write_domain_list(
+            UPSTREAM_DIR / tag, f["suffix"], f["exact"],
+            [f"# ⚠️ 自动生成，请勿手改（要补条目请写 data/extra/{tag}）",
+             f"# 来源: {item['url']}",
+             f"# 许可: {item.get('license')}   用途: {item.get('purpose')}"])
+        print(f"\n  → {tag}: {counts}")
+        record["groups"][tag] = {"role": "source", "entries": counts,
+                                 "origin": item["url"], "license": item.get("license")}
         if counts["total"] < 1000:
-            problems.append(f"{tag}: 规范化后仅 {counts['total']} 条，疑似上游结构变了")
+            problems.append(f"{tag}: 仅 {counts['total']} 条，疑似上游结构变了")
+
+    base_set = set(fetched.get("advert.base", {}).get("suffix", []))
+
+    # ── 3. 分类：先叶子组，再聚合组 ───────────────────────────────────
+    classified: dict[str, set[str]] = {}
+    taken: set[str] = set()
+    for name, g in groups_cfg.items():
+        if g.get("union_of"):
+            continue
+        suf, sub = g.get("from_suffixes") or [], g.get("from_substrings") or []
+        picked = {d for d in base_set if matches(d, suf, sub)} if (suf or sub) else set()
+        members = set(picked)
+        for extra_tag in g.get("plus") or []:
+            members |= set(fetched.get(extra_tag, {}).get("suffix", []))
+        classified[name] = members
+        taken |= picked
+
+    for name, g in groups_cfg.items():
+        if not g.get("union_of"):
+            continue
+        members: set[str] = set()
+        for other in g["union_of"]:
+            members |= classified.get(other, set())
+        if g.get("rest_of"):
+            members |= (base_set - taken)
+        for extra_tag in g.get("plus") or []:
+            members |= set(fetched.get(extra_tag, {}).get("suffix", []))
+        classified[name] = members
+
+    # ── 4. 写出各组 ───────────────────────────────────────────────────
+    print()
+    for name in sorted(classified):
+        g = groups_cfg[name]
+        members = classified[name]
+        if not members:
+            print(f"  → {name:<12} 0 条（公共源无内容，靠手工层 data/domains|extra 提供）")
+            record["groups"][name] = {"role": "group", "label": g.get("label"),
+                                      "entries": {"suffix": 0, "exact": 0, "total": 0},
+                                      "note": "公共来源无内容，由手工层提供"}
+            continue
+        counts = write_domain_list(
+            UPSTREAM_DIR / name, sorted(members), [],
+            [f"# ⚠️ 自动生成，请勿手改（要补条目请写 data/extra/{name}）",
+             f"# 组: {g.get('label') or name}",
+             f"# 由 scripts/fetch_upstream.py 依 sources.json 的分类规则生成",
+             f"# 内容: from_suffixes={'有' if g.get('from_suffixes') else '无'}"
+             f"  from_substrings={g.get('from_substrings') or []}"
+             f"  plus={g.get('plus') or []}"
+             f"  union_of={g.get('union_of') or []}"
+             f"  rest_of={g.get('rest_of') or '无'}"])
+        print(f"  → {name:<12} {counts['total']:>6} 条   {g.get('label') or ''}")
+        record["groups"][name] = {"role": "group", "label": g.get("label"), "entries": counts}
 
     PROVENANCE.parent.mkdir(parents=True, exist_ok=True)
-    PROVENANCE.write_text(
-        json.dumps(record, ensure_ascii=False, indent=2) + "\n",
-        encoding="utf-8", newline="\n")
+    PROVENANCE.write_text(json.dumps(record, ensure_ascii=False, indent=2) + "\n",
+                          encoding="utf-8", newline="\n")
     print(f"\nprovenance → {PROVENANCE.relative_to(ROOT)}")
 
     if problems:
