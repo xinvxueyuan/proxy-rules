@@ -1,8 +1,19 @@
 __pycache__/
 *.pyc
 .venv/
-# CI 临时产物
+
+# 构建/校验的临时目录
 build/
 tmp/
 cache.db
+
+# 本地提交信息草稿
 commit-msg.txt
+
+# 上游拉取的规则数据（每天变动、单个 2MB+）：不进 main，
+# 由 scripts/fetch_upstream.py 在构建时生成，来源与 sha256 记在 sources.json / PROVENANCE.json。
+data/upstream/
+
+# 产物：发布到 dist 分支与 Release，不进 main
+# （main 只保留源码，否则每天 2.8MB 的产物会把仓库历史撑爆）
+dist/

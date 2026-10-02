@@ -27,7 +27,9 @@ import re
 import sys
 
 ROOT = pathlib.Path(__file__).resolve().parent.parent
-DOMAIN_DIR = ROOT / "data" / "domains"
+DOMAIN_DIR = ROOT / "data" / "domains"      # 自持规则
+UPSTREAM_DIR = ROOT / "data" / "upstream"    # 上游拉取（gitignore，由 fetch_upstream.py 生成）
+SOURCES = ROOT / "sources.json"
 IP_DIR = ROOT / "data" / "ip"
 OUT_DIR = ROOT / "dist" / "clash"
 
@@ -91,7 +93,46 @@ def dump_yaml(name: str, behavior: str, payload: list[str]) -> str:
     return head + body
 
 
+def check_upstream() -> list[str]:
+    """sources.json 声明要拉的上游列表，本地必须齐备。
+
+    否则会「静默产出一个少了 11 万条的产物」—— 这种失败在客户端表现为
+    「国内站全走代理」，很难归因，所以宁可在构建时就炸掉。
+    """
+    problems: list[str] = []
+    if not SOURCES.exists():
+        return [f"缺 {SOURCES.name}"]
+    declared = json.loads(SOURCES.read_text(encoding="utf-8")).get("upstream", [])
+    for item in declared:
+        p = UPSTREAM_DIR / item["tag"]
+        if not p.exists():
+            problems.append(f"上游列表 {item['tag']} 不存在（先跑 scripts/fetch_upstream.py）")
+            continue
+        # 去注释后统计行数，太少的说明上游结构变了或下载被截断
+        n = sum(1 for ln in p.read_text(encoding="utf-8").splitlines()
+                if ln.strip() and not ln.strip().startswith("#"))
+        if n < 100:
+            problems.append(f"上游列表 {item['tag']} 只有 {n} 条，疑似拉取不完整")
+    return problems
+
+
+def parse_domain_list_dirs() -> list[pathlib.Path]:
+    """按 自持 → 上游 的顺序返回所有域名列表文件"""
+    files: list[pathlib.Path] = []
+    for d in (DOMAIN_DIR, UPSTREAM_DIR):
+        if d.is_dir():
+            files.extend(sorted(p for p in d.glob("*")
+                                if p.is_file() and not p.name.startswith(".")))
+    return files
+
+
 def main() -> int:
+    guard = check_upstream()
+    if guard:
+        print("❌ 上游数据不齐备，拒绝出产物：")
+        for g in guard:
+            print(f"   - {g}")
+        return 2
     OUT_DIR.mkdir(parents=True, exist_ok=True)
     for stale in OUT_DIR.glob("*.yaml"):
         stale.unlink()
@@ -99,10 +140,8 @@ def main() -> int:
     manifest: list[dict] = []
     problems: list[str] = []
 
-    # 域名列表
-    for path in sorted(DOMAIN_DIR.glob("*")):
-        if not path.is_file() or path.name.startswith("."):
-            continue
+    # 域名列表（自持 + 上游）
+    for path in parse_domain_list_dirs():
         plain, special, warns = parse_domain_list(path)
         problems.extend(warns)
         if not plain and not special:
@@ -131,7 +170,7 @@ def main() -> int:
             # name = Clash 配置里 rule-providers 的键名，必须唯一
             "name": out.name[:-len(".yaml")].replace(".classical", ""),
             "file": out.name,
-            "source": f"data/domains/{path.name}",
+            "source": str(path.relative_to(ROOT)).replace("\\", "/"),
             "behavior": "classical" if special else "domain",
             "entries": payload_len,
             "sha256": hashlib.sha256(out.read_bytes()).hexdigest(),
@@ -153,7 +192,8 @@ def main() -> int:
         manifest.append({
             # IP 列表的 provider 名带 -ip 后缀，避免与同名域名列表撞名
             "name": out_name[:-len(".yaml")], "file": out_name,
-            "source": f"data/ip/{path.name}", "behavior": "ipcidr",
+            "source": str(path.relative_to(ROOT)).replace("\\", "/"),
+            "behavior": "ipcidr",
             "entries": len(ips), "sha256": hashlib.sha256(out.read_bytes()).hexdigest(),
         })
 

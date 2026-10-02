@@ -3,13 +3,16 @@ name: build
 on:
   push:
     branches: [main]
-    paths-ignore: ["dist/**", "README.md", "LICENSE", "sources.yaml"]
+    paths-ignore:
+      - "README.md"
+      - "LICENSE"
+      - "sources.json"
   schedule:
     - cron: "0 19 * * *" # 每天 03:00 CST
   workflow_dispatch:
 
 concurrency:
-  group: build-${{ github.ref }}
+  group: build-main
   cancel-in-progress: true
 
 permissions:
@@ -30,13 +33,16 @@ jobs:
           go-version: stable
           cache: false
 
+      - name: 拉取上游规则列表
+        run: python3 scripts/fetch_upstream.py
+
       - name: 生成 Clash rule-provider
         run: python3 scripts/build_clash.py
 
       - name: 生成 Xray geosite.dat / geoip.dat
         run: bash scripts/build_xray.sh
 
-      - name: 用真实内核校验产物
+      - name: 用真实内核校验产物（含变异检验 + 一致性）
         run: bash scripts/verify.sh
 
       - name: 刷新全量 sha256 清单
@@ -46,20 +52,30 @@ jobs:
             | sort -z | xargs -0 sha256sum > dist/MANIFEST.sha256
           cat dist/MANIFEST.sha256
 
-      - name: 提交 dist 产物
+      # 产物不进 main：main 每天被 2.8MB 的产物撑一次会把历史撑爆。
+      # 改成往一个**孤立的 dist 分支**强推「只有一个快照提交」的分支，
+      # 这样 raw 直链依然可用，而分支历史永远只有 1 个提交、不会累积。
+      - name: 发布产物到 dist 分支（单快照强推）
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          cd "$GITHUB_WORKSPACE"
+          set -euo pipefail
+          ART=/tmp/dist-artifacts
+          rm -rf "$ART" && mkdir -p "$ART"
+          cp -r dist/. "$ART/"
+          find "$ART" -name '*.db' -delete   # 清掉内核缓存
+          cd "$ART"
+          git init -q -b dist
           git config user.name  "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add dist
-          if git diff --cached --quiet; then
-            echo "产物无变化，跳过提交"
-          else
-            git commit -m "chore(dist): 自动构建产物 [skip ci]"
-            git push
-          fi
+          git add -A
+          git commit -q -m "snapshot $(date -u +%Y-%m-%dT%H:%M:%SZ)"
+          git remote add origin "https://x-access-token:${GH_TOKEN}@github.com/${GITHUB_REPOSITORY}.git"
+          git push -q -f origin HEAD:dist
+          echo "已强推 dist 分支，文件："
+          git ls-files | sed 's/^/  /'
 
-      - name: 发布 .dat（固定 tag，地址稳定）
+      - name: 发布 .dat 与规则到 Release（固定 tag，地址稳定）
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
@@ -67,8 +83,11 @@ jobs:
           gh release delete rules-latest --yes --cleanup-tag 2>/dev/null || true
           gh release create rules-latest \
             dist/xray/self-geosite.dat dist/xray/self-geoip.dat \
-            dist/MANIFEST.sha256 \
+            dist/clash/*.yaml dist/clash/MANIFEST.json \
+            dist/PROVENANCE.json dist/MANIFEST.sha256 \
             --title "rules $(date -u +%Y-%m-%d)" \
-            --notes "自持分流规则自动构建产物（geosite.dat / geoip.dat）。
+            --notes "自持 + 上游合并的分流规则产物（geosite.dat / geoip.dat / rule-provider）。
+
+          上游来源与许可证见 PROVENANCE.json 与 sources.json。
           提交：${{ github.sha }}
           校验清单见 MANIFEST.sha256。"
