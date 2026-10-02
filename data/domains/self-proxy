@@ -1,0 +1,102 @@
+# 自持「强制走代理」域名清单
+#
+# 用于：这些域名要么被墙、要么需要境外出口才有正确内容/速度，命中即走代理，
+# 不必等待 DNS 解析结果（比 IP 判定更早、更稳）。
+# 语法同 self-direct（见该文件的说明）。
+
+# —— 搜索 / 账号 / 云服务 ——
+domain:google.com
+domain:googleapis.com
+domain:gstatic.com
+domain:googleusercontent.com
+domain:googlevideo.com
+domain:youtube.com
+domain:ytimg.com
+domain:ggpht.com
+domain:blogspot.com
+
+# —— 代码托管 / 包管理 / 容器 ——
+domain:github.com
+domain:githubusercontent.com
+domain:githubassets.com
+domain:github.io
+domain:ghcr.io
+domain:gitlab.com
+domain:docker.com
+domain:docker.io
+domain:huggingface.co
+domain:hf.co
+domain:npmjs.org
+domain:pypi.org
+domain:python.org
+domain:rust-lang.org
+domain:go.dev
+domain:golang.org
+domain:rubygems.org
+domain:crates.io
+domain:jetbrains.com
+
+# —— AI 服务 ——
+domain:openai.com
+domain:chatgpt.com
+domain:anthropic.com
+domain:claude.ai
+domain:gemini.google.com
+domain:perplexity.ai
+domain:mistral.ai
+domain:deepseek.com
+
+# —— 社交 / 通讯 ——
+domain:x.com
+domain:twitter.com
+domain:twimg.com
+domain:telegram.org
+domain:t.me
+domain:telegram.me
+domain:reddit.com
+domain:redd.it
+domain:discord.com
+domain:discordapp.com
+domain:discord.gg
+domain:facebook.com
+domain:instagram.com
+domain:whatsapp.com
+domain:signal.org
+domain:proton.me
+domain:protonmail.com
+
+# —— 知识 / 媒体 ——
+domain:wikipedia.org
+domain:wikimedia.org
+domain:stackoverflow.com
+domain:stackexchange.com
+domain:medium.com
+domain:quora.com
+domain:netflix.com
+domain:spotify.com
+domain:twitch.tv
+domain:soundcloud.com
+
+# —— 图像 / 二次元（本机常用）——
+domain:pixiv.net
+domain:pximg.net
+domain:fanbox.cc
+domain:nicovideo.jp
+domain:danbooru.donmai.us
+domain:gelbooru.com
+domain:yande.re
+domain:konachan.com
+domain:safebooru.org
+domain:deviantart.com
+domain:artstation.com
+domain:patreon.com
+
+# —— 其他常被墙 ——
+domain:duckduckgo.com
+domain:archive.org
+domain:imgur.com
+domain:bbc.com
+domain:nytimes.com
+domain:reuters.com
+domain:cloudflare-dns.com
+domain:one.one.one.one

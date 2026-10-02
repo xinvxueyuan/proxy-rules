@@ -1,0 +1,7 @@
+__pycache__/
+*.pyc
+.venv/
+# CI 临时产物
+build/
+tmp/
+cache.db

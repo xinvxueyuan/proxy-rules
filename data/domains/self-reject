@@ -1,0 +1,74 @@
+# 自持「拦截」域名清单（广告 / 跟踪 / 统计 / 遥测）
+#
+# 命中即拒（REJECT / blackhole），不走上游也不走代理。
+# 只收录**通用、可公开**的广告与统计域；公共大列表（如 category-ads-all）
+# 请在配置里以引用方式并用，不要往这里贴——见 README「混用示例」。
+
+# —— 通用广告交易 / 投放 ——
+domain:doubleclick.net
+domain:googleadservices.com
+domain:googlesyndication.com
+domain:googletagservices.com
+domain:googletagmanager.com
+domain:google-analytics.com
+domain:adservice.google.com
+domain:adnxs.com
+domain:adsrvr.org
+domain:criteo.com
+domain:criteo.net
+domain:taboola.com
+domain:outbrain.com
+domain:pubmatic.com
+domain:openx.net
+domain:rubiconproject.com
+domain:smartadserver.com
+domain:teads.tv
+domain:2mdn.net
+domain:adform.net
+domain:adroll.com
+domain:casalemedia.com
+domain:indexexchange.com
+domain:sharethrough.com
+domain:yieldmo.com
+
+# —— 移动监测 / 归因（App 里最常见的「偷跑」）——
+domain:appsflyer.com
+domain:adjust.com
+domain:branch.io
+domain:kochava.com
+domain:tenjin.io
+domain:singular.net
+domain:appmetrica.yandex.net
+domain:umeng.com
+domain:umengcloud.com
+domain:umeng.co
+domain:bugly.qq.com
+domain:beacon.qq.com
+domain:pingjs.qq.com
+
+# —— 国内广告 / 统计 ——
+domain:cnzz.com
+domain:admaster.com.cn
+domain:adsame.com
+domain:allyes.com
+domain:ipinyou.com
+domain:mediav.com
+domain:tanx.com
+domain:alimama.com
+domain:mmstat.com
+domain:pos.baidu.com
+domain:cpro.baidu.com
+domain:union.baidu.com
+domain:mobads.baidu.com
+
+# —— 受众测量 / 指纹 ——
+domain:scorecardresearch.com
+domain:quantserve.com
+domain:moatads.com
+domain:nielsen.com
+domain:comscore.com
+domain:hotjar.com
+domain:fullstory.com
+domain:mouseflow.com
+domain:crazyegg.com
+domain:bugsnag.com

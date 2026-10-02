@@ -1,0 +1,39 @@
+# 公共规则来源声明（**只作引用与记录，不在构建期合并**）
+#
+# 设计取舍：自持规则进本仓产物（geosite.dat / geoip.dat / dist/clash/*.yaml），
+# 公共规则由客户端配置**另外并写**一份引用即可。这样：
+#   - 本仓产物保持可复现（上游变化不会悄悄改变你的出口行为）；
+#   - 想换/停用某个公共列表时，只动配置，不用重新构建。
+#
+# 想真正合并公共列表时的做法：在 data/domains/ 里 `include:` 需要的那一支，
+# 并用 scripts/build_xray.sh 的 --upstream 模式把上游 data 目录一起喂给 dlc
+# （注意 include 链会牵进许多文件，体积会明显变大）。
+
+domain_lists:
+  - name: geosite:category-ads-all
+    url: https://github.com/v2fly/domain-list-community/tree/master/data/category-ads-all
+    note: 广告/跟踪大合集；与自持 self-reject 并用即可，不必合并。
+  - name: geosite:cn
+    url: https://github.com/v2fly/domain-list-community/tree/master/data/cn
+    note: 国内域名大合集；自持 self-direct 已覆盖常用部分，需要全量时再用。
+  - name: geosite:geolocation-!cn
+    url: https://github.com/v2fly/domain-list-community/tree/master/data/geolocation-!cn
+    note: 「非中国大陆」集合；替代手写 self-proxy 大表。
+  - name: geosite:category-media
+    url: https://github.com/v2fly/domain-list-community/tree/master/data/category-media
+    note: 流媒体集合。
+
+prebuilt:
+  geosite:
+    - https://github.com/v2fly/domain-list-community/releases/latest/download/dlc.dat
+  geoip:
+    - https://github.com/v2fly/geoip/releases/latest/download/geoip.dat
+  clash_rule_providers:
+    - https://github.com/Loyalsoldier/clash-rules
+    - https://github.com/MetaCubeX/meta-rules-dat
+
+kernels:
+  mihomo: v1.19.32
+  xray: v26.9.30
+  note: Xray 的新版本走 pre-release 通道（`releases/latest` 只指到 v26.3.27），
+    CI 里取的是「最新一个 release（含 pre-release）」。

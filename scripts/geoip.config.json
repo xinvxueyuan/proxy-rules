@@ -1,0 +1,21 @@
+{
+  "input": [
+    {
+      "type": "text",
+      "action": "add",
+      "args": {
+        "inputDir": "./data/ip"
+      }
+    }
+  ],
+  "output": [
+    {
+      "type": "v2rayGeoIPDat",
+      "action": "output",
+      "args": {
+        "outputDir": "./dist/xray",
+        "outputName": "geoip.dat"
+      }
+    }
+  ]
+}

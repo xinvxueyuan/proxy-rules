@@ -1,0 +1,56 @@
+# 自持直连域名清单
+#
+# 语法（v2fly domain-list，dlc 读取）：
+#   domain:example.com     匹配 example.com 及其所有子域
+#   full:a.example.com     仅精确匹配
+#   keyword:xxx            子串匹配（mihomo 侧会转到 classical 输出）
+#   regexp:^a.*\.b$        正则（同上）
+#   include:other-file     引用本目录下另一个文件
+#   @attr                  属性标注（本项目不使用，构建时会忽略并提示）
+#
+# 只收录「自己维护」的条目；公共列表以**引用**方式并用（见 README 与 sources.yaml），
+# 不在构建期合并——这样上游怎么变都不会影响本仓产物的可复现性。
+
+# —— 即时通讯 / 支付 / 国内平台（走直连更快，且无需代理）——
+domain:qq.com
+domain:weixin.qq.com
+domain:wechat.com
+domain:work.weixin.qq.com
+domain:alipay.com
+domain:alipayobjects.com
+domain:taobao.com
+domain:tmall.com
+domain:alicdn.com
+domain:jd.com
+domain:360buyimg.com
+domain:baidu.com
+domain:bdstatic.com
+domain:bilibili.com
+domain:hdslb.com
+domain:bilivideo.com
+domain:acgvideo.com
+domain:zhihu.com
+domain:zhimg.com
+domain:douyin.com
+domain:bytedance.com
+domain:snssdk.com
+domain:163.com
+domain:126.net
+domain:netease.com
+domain:kugou.com
+domain:qqmusic.qq.com
+
+# —— 国内云 / 开发者基础设施（直连能通，绕代理反而更慢）——
+domain:aliyun.com
+domain:aliyuncs.com
+domain:tencentcloudapi.com
+domain:myqcloud.com
+domain:huaweicloud.com
+domain:qcloud.com
+domain:gitcode.com
+domain:gitee.com
+
+# —— 国内公共 DNS / NTP ——
+domain:alidns.com
+domain:dnspod.cn
+domain:ntp.org.cn
