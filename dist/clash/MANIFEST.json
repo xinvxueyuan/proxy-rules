@@ -7,7 +7,7 @@
       "source": "data/domains/self-direct",
       "behavior": "domain",
       "entries": 38,
-      "sha256": "50961d74b7bb26079293f6b74f69a9ad46eb81077bc7c4c3a1b53b943faa122e"
+      "sha256": "b874db280540ddab492224d3b8a41ecb4a65f93e194f7a5a3da3950fe9c7bf3b"
     },
     {
       "name": "self-proxy",
@@ -15,7 +15,7 @@
       "source": "data/domains/self-proxy",
       "behavior": "domain",
       "entries": 83,
-      "sha256": "aa2890591a6e0e811f14fdb03039d49a34d4fdfab89a2594df191a6a04040ccf"
+      "sha256": "ecfbc80a5a70e49ce9760e4eea084a2e2e884231e43a02ab10a30101f156c886"
     },
     {
       "name": "self-reject",
@@ -23,7 +23,7 @@
       "source": "data/domains/self-reject",
       "behavior": "domain",
       "entries": 61,
-      "sha256": "f374d9ee8ae9e4342d4fc6afc2e5a9fd608e364049191c49d1bb5d9fb24106be"
+      "sha256": "be23b3d8ddbb175629c1daa028ab9cda9bda33325698476cb36951662a495d10"
     },
     {
       "name": "self-direct-ip",
@@ -31,7 +31,7 @@
       "source": "data/ip/self-direct.txt",
       "behavior": "ipcidr",
       "entries": 9,
-      "sha256": "61359f3923cae32ae312888a83bd109bb246003f8264a7db77e348a6704ee31a"
+      "sha256": "57608c14817f32f2507e60dece4cdca43e756da28eb1df4d4440b3f9391d596a"
     }
   ]
 }

@@ -1,0 +1,7 @@
+c004f99ac4c96f21058e5bd4268395126ad76411bd79d34940f44497e0a1e3c9  dist/clash/MANIFEST.json
+57608c14817f32f2507e60dece4cdca43e756da28eb1df4d4440b3f9391d596a  dist/clash/self-direct-ip.yaml
+b874db280540ddab492224d3b8a41ecb4a65f93e194f7a5a3da3950fe9c7bf3b  dist/clash/self-direct.yaml
+ecfbc80a5a70e49ce9760e4eea084a2e2e884231e43a02ab10a30101f156c886  dist/clash/self-proxy.yaml
+be23b3d8ddbb175629c1daa028ab9cda9bda33325698476cb36951662a495d10  dist/clash/self-reject.yaml
+766b2851a50ea651ef8afd550d180103dedee667e8d7dbf6f7f6ccc4662909a1  dist/xray/self-geoip.dat
+aa2c60b509efc5d83e434355abc3548d3c4da7631dbcafccdca5e7923dd9457c  dist/xray/self-geosite.dat
