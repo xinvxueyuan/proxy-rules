@@ -1,0 +1,5 @@
+# shell 脚本必须以 LF 进仓，否则 CI（Linux）会报 $: command not found
+*.sh text eol=lf
+*.py text eol=lf
+*.yaml text eol=lf
+*.yml text eol=lf
