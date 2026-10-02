@@ -55,6 +55,42 @@ rule-providers:
     type: file
     behavior: domain
     path: dist/clash/advert.org.yaml
+  site.cn.gov:
+    type: file
+    behavior: domain
+    path: dist/clash/site.cn.gov.yaml
+  site.cn.media:
+    type: file
+    behavior: domain
+    path: dist/clash/site.cn.media.yaml
+  site.cn.edu:
+    type: file
+    behavior: domain
+    path: dist/clash/site.cn.edu.yaml
+  site.cn.med:
+    type: file
+    behavior: domain
+    path: dist/clash/site.cn.med.yaml
+  site.cn.fin:
+    type: file
+    behavior: domain
+    path: dist/clash/site.cn.fin.yaml
+  site.cn.life:
+    type: file
+    behavior: domain
+    path: dist/clash/site.cn.life.yaml
+  site.cn.map:
+    type: file
+    behavior: domain
+    path: dist/clash/site.cn.map.yaml
+  site.cn.travel:
+    type: file
+    behavior: domain
+    path: dist/clash/site.cn.travel.yaml
+  site.cn.shop:
+    type: file
+    behavior: domain
+    path: dist/clash/site.cn.shop.yaml
   site.cn:
     type: file
     behavior: domain

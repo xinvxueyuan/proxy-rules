@@ -9,6 +9,7 @@
 中文互联网追踪 ──► REJECT      （advert.cn）
 自持强制代理 ───► PROXY        （self-proxy，用来覆盖下面两条的误判）
 国内域名 ──────► DIRECT        （site.cn，约 11.1 万条）
+  └ 九类保底 ──► DIRECT        （site.cn.{gov,media,edu,med,fin,life,map,travel,shop}）
 国内 IP ───────► DIRECT        （self-direct-ip + geoip:cn）
 其余一切 ──────► PROXY         ← 兜底
 ```
@@ -27,7 +28,16 @@
 
 | tag | Clash 文件 | 条数 | 含义 | 来源 |
 |---|---|---|---|---|
-| `site.cn` | `site.cn.yaml` | ~111,300 | **国内域名直连** | 上游（Loyalsoldier direct） |
+| `site.cn` | `site.cn.yaml` | ~111,470 | **国内域名直连**（上游大名单 ∪ 下面 9 个手工分类组） | 上游 + 手工 |
+| `site.cn.gov` | `site.cn.gov.yaml` | 15 | **中国政务**（含 `gov.cn` 通配） | 手工保底 |
+| `site.cn.media` | `site.cn.media.yaml` | 60 | **中国媒体** | 手工保底 |
+| `site.cn.edu` | `site.cn.edu.yaml` | 33 | **中国教育**（含 `edu.cn` / `ac.cn` 通配） | 手工保底 |
+| `site.cn.med` | `site.cn.med.yaml` | 24 | **中国医疗** | 手工保底 |
+| `site.cn.fin` | `site.cn.fin.yaml` | 78 | **中国金融** | 手工保底 |
+| `site.cn.life` | `site.cn.life.yaml` | 61 | **中国生活服务** | 手工保底 |
+| `site.cn.map` | `site.cn.map.yaml` | 12 | **中国地图** | 手工保底 |
+| `site.cn.travel` | `site.cn.travel.yaml` | 49 | **中国出行** | 手工保底 |
+| `site.cn.shop` | `site.cn.shop.yaml` | 48 | **中国购物** | 手工保底 |
 | `advert.com` | `advert.com.yaml` | ~50,990 | **商业广告**（通用广告网络 ∪ 下面 6 个子组） | 上游分类 + 手工补充 |
 | `advert.gg` | `advert.gg.yaml` | 45 | 谷歌隐私与广告 | 上游分类 + 手工补充 |
 | `advert.ms` | `advert.ms.yaml` | 396 | 微软隐私与广告 | 上游分类 + 设备遥测表 |
@@ -160,6 +170,51 @@ Xray 支持**按 URL 热更新** `.dat`（不用重启、不用手动放文件�
 }
 ```
 
+## 九类中国站点保底直连（`site.cn.*`）
+
+`site.cn` 的上游部分来自「能解析到中国大陆 IP 的域名」表（约 11.1 万条），
+它**每天随上游变化**。为了让政务、媒体、教育、医疗、金融、生活服务、地图、出行、购物
+这些站点**永远不被漏掉**，另外用手工整理的根域名做成 9 个子组，并由 `site.cn` 聚合它们。
+
+### 通配根域名语义（这一组的设计核心）
+
+`domain:X` 匹配 X **及其所有子域**（DNS 树意义），所以**只写根域就够**：
+
+| 写的 | 覆盖 |
+|---|---|
+| `domain:gov.cn` | `www.gov.cn`、`moe.gov.cn`、`beijing.gov.cn` …… 全部 `*.gov.cn` |
+| `domain:edu.cn` | `pku.edu.cn`、`tsinghua.edu.cn` …… 全部 `*.edu.cn` |
+| `domain:ac.cn` | `cas.ac.cn` 等科研机构 |
+| `domain:taobao.com` | `item.taobao.com`、`gw.alicdn.com` 等 |
+| `domain:12306.cn` | `www.12306.cn`、`kyfw.12306.cn` 等 |
+
+所以**不需要**逐个列省部级站点或子服务——一个 `gov.cn` 就顶掉全部。这也让清单能保持很短。
+
+### 条目的来源与核实
+
+- 全部**手工整理**（你选的方案），没有拉公共列表：v2fly 的 `category-*-cn` 里
+  **政务/地图/购物/出行四类根本不存在**、医疗只有 11 行，且这些分类**没进官方 dat**；
+  而 `site.cn` 上游那 11 万条已经覆盖了大量国内长尾域名，本组只需保住知名的。
+- **每个条目都经 DNS 实测**（apex 或 `www.` 至少一个可解析，在服务器上跑的）。
+  ⚠️ 测的时候不能只测 apex：`gov.cn` / `edu.cn` / `pbc.gov.cn` 这类**apex 本来就没有
+  A 记录**（只有 `www.` 有），只测 apex 会把最有价值的条目误杀。
+- 少数 apex 与 `www.` 都无 A 记录、但站点确实存在（只用深层子域）的根域，经人工确认后保留
+  （如 `mof.gov.cn`、`unionpay.com`、`sf-express.com` 等）。
+- **只收大陆站点**，港澳台不在本组范围。
+
+### 聚合与守卫
+
+`site.cn` = 上游大名单 **∪** 这 9 个子组（`sources.json` 的 `union_of`）。
+所以**客户端无需改配置**——照旧引 `site.cn` 就已经包含这九类；
+想单独审计/开关某类时，再单独引对应的 `site.cn.<分类>` 即可。
+
+两道守卫防止「少一整个分类却没人发现」：
+
+1. `sources.json` 里这些组标了 `hand: true`，`fetch_upstream.py --check` 会要求它们非空；
+2. `assemble_data.py` 解析 `union_of` 时，**成员缺失直接失败**（不再静默跳过）。
+
+两者都做过实证（临时改掉 `site.cn.gov` → 一个退出码 1、一个退出码 2）。
+
 ## 三个实测确认的坑（都有决定性证据）
 
 ### 1. 产物不能叫 `geosite.dat` / `geoip.dat`（会遮蔽官方同名文件）
@@ -193,7 +248,8 @@ Xray 的 `geosite:` / `geoip:` 内置引用读的是资源目录里**固定文�
 
 ```
 data/domains/<tag>     自持列表（手写，进 git）
-data/extra/<tag>       对上游组的手工补充（手写，进 git）
+data/extra/<tag>       对上游组的手工补充 / 手工分类组（手写，进 git）
+                       例：site.cn.{gov,media,edu,med,fin,life,map,travel,shop}
 data/upstream/<tag>    上游拉取并分类的结果（.gitignore，构建时生成）
 build/data/<tag>       三层合并 + 聚合解析后的最终数据（构建中间产物）
 ```
@@ -238,6 +294,7 @@ include:other-file        # 引用同目录另一文件
 | 国内域名直连 | [Loyalsoldier/clash-rules](https://github.com/Loyalsoldier/clash-rules) `direct.txt` | GPL-3.0 | 111,304 |
 | 广告/追踪底座 | [hagezi/dns-blocklists](https://github.com/hagezi/dns-blocklists) `light-onlydomains` | GPL-3.0 | 50,628 |
 | 设备遥测（微软/国内/苹果等） | 同上 `native.*` | GPL-3.0 | 2,713 |
+| 九类中国站点保底 | **手工整理**（每个条目经 DNS 实测） | 本仓自持 | 380 |
 
 **本仓以 GPL-3.0 发布**（见 [LICENSE](LICENSE)）—— 产物由 GPL-3.0 的上游数据构建。
 

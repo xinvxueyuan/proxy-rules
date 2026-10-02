@@ -71,10 +71,24 @@ def main() -> int:
     # 2) 解析聚合组（union_of）——必须在三层合并之后
     src = json.loads(SOURCES.read_text(encoding="utf-8")) if SOURCES.exists() else {}
     aggregates: dict[str, list[str]] = {}
+    missing_members = []
     for gname, g in (src.get("groups") or {}).items():
         if gname.startswith("_") or not g.get("union_of"):
             continue
-        aggregates[gname] = [m for m in g["union_of"] if m in merged]
+        members = []
+        for m in g["union_of"]:
+            if m in merged:
+                members.append(m)
+            else:
+                # 静默跳过会产出「聚合里少了整整一个分类」的产物，客户端表现为
+                # 那类站点走代理 —— 很难归因，所以直接失败。
+                missing_members.append(f"{gname} 的成员 {m} 不存在")
+        aggregates[gname] = members
+    if missing_members:
+        print("❌ 聚合组的成员缺失：")
+        for m in missing_members:
+            print(f"   - {m}")
+        return 2
 
     for gname, members in sorted(aggregates.items()):
         base = merged.setdefault(gname, [])

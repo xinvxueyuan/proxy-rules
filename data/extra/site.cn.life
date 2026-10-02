@@ -1,0 +1,75 @@
+# 中国生活服务（site.cn.life）—— 通配根域名，保证直连
+#
+# 语义：`domain:X` 匹配 X **及其所有子域**（DNS 树意义）。
+#   例如 `domain:gov.cn` 覆盖 `www.gov.cn`、`moe.gov.cn`、`beijing.gov.cn` 等全部 *.gov.cn。
+#   所以本组只写「根」，不写子域；也刻意不写具体部门/省站（根域已全覆盖）。
+#
+# 为什么需要这一组：site.cn（上游 11 万条）来自「能解析到中国大陆 IP 的域名」，
+#   会随上游每日变化；本组是**手写保底**，确保这些站点永远不被漏掉。
+#
+# 每个条目都经 DNS 实测（apex 或 www 至少一个可解析）；少数 apex/www 都无 A 记录
+#   但站点确实存在（只用深层子域）的根域也已人工确认保留。
+#
+# 只收大陆站点；港澳台不在本组范围。
+
+domain:10010.com
+domain:10086.cn
+domain:189.cn
+domain:51job.com
+domain:51jobcdn.com
+domain:58.com
+domain:5i5j.com
+domain:95598.cn
+domain:ane56.com
+domain:anjuke.com
+domain:baihe.com
+domain:best-inc.com
+domain:boss.com
+domain:cainiao.com
+domain:chinamobile.com
+domain:chinapost.com.cn
+domain:chinatelecom-h.com
+domain:chinatelecom.com.cn
+domain:chinaunicom.com.cn
+domain:csg.cn
+domain:damai.cn
+domain:deppon.com
+domain:dianping.com
+domain:douban.com
+domain:ele.me
+domain:elemecdn.com
+domain:ems.com.cn
+domain:fang.com
+domain:ganji.com
+domain:gewara.com
+domain:hupu.com
+domain:jdwl.com
+domain:jiayuan.com
+domain:ke.com
+domain:kongfz.com
+domain:kuaidi100.com
+domain:lagou.com
+domain:lianjia.com
+domain:liepin.com
+domain:maoyan.com
+domain:meituan.com
+domain:meituan.net
+domain:sf-express.com
+domain:sf-express.com.cn
+domain:sgcc.com.cn
+domain:sto.cn
+domain:taopiaopiao.com
+domain:tieba.com
+domain:weather.com.cn
+domain:weathercn.com
+domain:yingjiesheng.com
+domain:yto.net.cn
+domain:yundaex.com
+domain:zhaopin.com
+domain:zhenai.com
+domain:zhihu.com
+domain:zhimg.com
+domain:zhipin.com
+domain:zhuanzhuan.com
+domain:ziroom.com
+domain:zto.com

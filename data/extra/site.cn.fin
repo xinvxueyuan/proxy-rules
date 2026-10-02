@@ -1,0 +1,92 @@
+# 中国金融（site.cn.fin）—— 通配根域名，保证直连
+#
+# 语义：`domain:X` 匹配 X **及其所有子域**（DNS 树意义）。
+#   例如 `domain:gov.cn` 覆盖 `www.gov.cn`、`moe.gov.cn`、`beijing.gov.cn` 等全部 *.gov.cn。
+#   所以本组只写「根」，不写子域；也刻意不写具体部门/省站（根域已全覆盖）。
+#
+# 为什么需要这一组：site.cn（上游 11 万条）来自「能解析到中国大陆 IP 的域名」，
+#   会随上游每日变化；本组是**手写保底**，确保这些站点永远不被漏掉。
+#
+# 每个条目都经 DNS 实测（apex 或 www 至少一个可解析）；少数 apex/www 都无 A 记录
+#   但站点确实存在（只用深层子域）的根域也已人工确认保留。
+#
+# 只收大陆站点；港澳台不在本组范围。
+
+domain:10jqka.com.cn
+domain:95516.com
+domain:99bill.com
+domain:abchina.com
+domain:abchina.com.cn
+domain:alipay.com
+domain:alipayobjects.com
+domain:amcfortune.com
+domain:bankcomm.com
+domain:bankofbeijing.com.cn
+domain:bankofchina.com
+domain:bankofshanghai.com
+domain:boc.cn
+domain:bse.cn
+domain:cbirc.gov.cn
+domain:ccb.com
+domain:ccdc.com.cn
+domain:cebbank.com
+domain:cgbchina.com.cn
+domain:chinaamc.com
+domain:chinabond.com.cn
+domain:chinaclear.cn
+domain:chinalife.com.cn
+domain:chinamoney.com.cn
+domain:cib.com.cn
+domain:circ.gov.cn
+domain:citicbank.com
+domain:citics.com
+domain:cmbc.com.cn
+domain:cmbchina.com
+domain:cmschina.com
+domain:cmschina.com.cn
+domain:cninfo.com.cn
+domain:cnstock.com
+domain:cpic.com.cn
+domain:csindex.com.cn
+domain:csrc.gov.cn
+domain:eastmoney.com
+domain:ebscn.com
+domain:efunds.com.cn
+domain:fullgoal.com.cn
+domain:gf.com.cn
+domain:gtja.com
+domain:hexiehealth.com
+domain:hexun.com
+domain:htsc.com.cn
+domain:hxb.com.cn
+domain:hzbank.com.cn
+domain:icbc.com.cn
+domain:jrj.com.cn
+domain:jsbchina.cn
+domain:lakala.com
+domain:nbcb.com.cn
+domain:neeq.com.cn
+domain:newchinalife.com
+domain:nfra.gov.cn
+domain:nhsa.gov.cn
+domain:pbc.gov.cn
+domain:pbccrc.org.cn
+domain:picc.com.cn
+domain:pingan.cn
+domain:pingan.com
+domain:psbc.com
+domain:safe.gov.cn
+domain:shclearing.com.cn
+domain:sinosig.com
+domain:spdb.com.cn
+domain:sse.com.cn
+domain:sseinfo.com
+domain:stockstar.com
+domain:swhy.com
+domain:szse.cn
+domain:taikang.com
+domain:tenpay.com
+domain:unionpay.com
+domain:unionpayintl.com
+domain:xueqiu.com
+domain:yeepay.com

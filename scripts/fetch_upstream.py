@@ -154,8 +154,10 @@ def main() -> int:
     if args.check:
         expected = [u["tag"] for u in upstream if not u.get("internal")]
         for gname, g in groups_cfg.items():
-            if g.get("from_suffixes") or g.get("from_substrings") or g.get("plus") \
-                    or g.get("union_of") or g.get("rest_of"):
+            # hand=true = 纯手工维护的组（如 site.cn.gov 通配根域名清单）：没有上游来源，
+            # 但必须存在且非空，否则产物会少掉整整一个分类，客户端表现为那类站点走代理。
+            if g.get("hand") or g.get("from_suffixes") or g.get("from_substrings") \
+                    or g.get("plus") or g.get("union_of") or g.get("rest_of"):
                 expected.append(gname)
         missing = []
         manual = [ROOT / "data" / "domains", ROOT / "data" / "extra"]
