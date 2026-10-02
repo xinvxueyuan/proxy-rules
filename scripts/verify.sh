@@ -120,6 +120,14 @@ fi
 cp "$TMP/self-reject.yaml.bak" "$ROOT/dist/clash/self-reject.yaml"
 
 echo
+echo "-- 7) 一致性：两种格式必须语义等价（同一份自持数据）--"
+if python3 scripts/verify_consistency.py; then
+  echo "   ✅ 一致性校验通过"
+else
+  echo "   ❌ 一致性校验失败"; FAIL=1
+fi
+
+echo
 echo "======== 结论 ========"
 if [ "$FAIL" -eq 0 ]; then
   echo "✅ 两种内核均成功加载产物，且全部变异被抓到"
