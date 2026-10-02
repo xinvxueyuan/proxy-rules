@@ -1,0 +1,58 @@
+{
+  "_comment": "本仓自持规则的唯一来源声明。机器可读，build 前由 scripts/fetch_upstream.py 拉取。",
+  "upstream": [
+    {
+      "tag": "china-direct",
+      "purpose": "国内域名直连（「只要国内域名直连、其余走代理兜底」里的那份『国内』）",
+      "url": "https://raw.githubusercontent.com/Loyalsoldier/clash-rules/release/direct.txt",
+      "format": "clash-domain",
+      "repo": "Loyalsoldier/clash-rules",
+      "license": "GPL-3.0",
+      "license_url": "https://github.com/Loyalsoldier/clash-rules/blob/release/LICENSE",
+      "note": "该表由「能解析到中国大陆 IP 的域名」汇总而来，约 11 万条，覆盖最全。",
+      "gitignore": true
+    }
+  ],
+  "catalog": [
+    {
+      "name": "geosite:cn",
+      "url": "https://github.com/v2fly/domain-list-community/tree/master/data/cn",
+      "entries": 6624,
+      "license": "MIT",
+      "note": "v2fly 精选维护版；实测 88.8% 被 china-direct 包含。想用官方 dat 里的 geosite:cn 时无需本仓产物。"
+    },
+    {
+      "name": "geosite:category-ads-all",
+      "url": "https://github.com/v2fly/domain-list-community/tree/master/data/category-ads-all",
+      "entries": 911,
+      "license": "MIT",
+      "note": "广告大合集，可与自持 self-reject 并用（客户端并写一条引用即可）。"
+    },
+    {
+      "name": "MetaCubeX cn",
+      "url": "https://github.com/MetaCubeX/meta-rules-dat",
+      "entries": 111224,
+      "license": "GPL-3.0",
+      "note": "与 Loyalsoldier direct 实测重复 98.2%（109263 条交集），属同一份东西，不需要两个都上。"
+    },
+    {
+      "name": "Loyalsoldier cncidr",
+      "url": "https://raw.githubusercontent.com/Loyalsoldier/clash-rules/release/cncidr.txt",
+      "entries": 9649,
+      "license": "GPL-3.0",
+      "note": "国内 IP 段。**未采用**：mihomo 有内置 GEOIP,CN、Xray 有内置 geoip:cn，无需自维。"
+    },
+    {
+      "name": "geosite:geolocation-!cn",
+      "url": "https://github.com/v2fly/domain-list-community/tree/master/data/geolocation-!cn",
+      "entries": 25023,
+      "license": "MIT",
+      "note": "「非中国大陆」集合。**未采用**：本项目是「默认走代理、国内直连」模型，兜底即代理，不需要反面列表。"
+    }
+  ],
+  "kernels": {
+    "mihomo": "v1.19.32",
+    "xray": "v26.9.30",
+    "note": "Xray 新版走 pre-release 通道（releases/latest 只指到 v26.3.27），CI 取最新一个 release 含 pre-release。"
+  }
+}

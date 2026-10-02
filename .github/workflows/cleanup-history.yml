@@ -1,0 +1,76 @@
+name: cleanup-history
+
+# main 现在不再提交任何产物（产物走 dist 分支与 Release），所以正常情况下
+# 没有东西会累积。这个工作流是**兜底**：清掉历史上误入的产物 / 草稿文件，
+# 并把仓库体积压回去。按月自动跑一次，也可手动触发。
+#
+# ⚠️ 它会重写 main 的提交历史（所有 SHA 变化），完成后本地 clone 需要重新拉取。
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "0 20 1 * *" # 每月 1 日 04:00 CST
+
+concurrency:
+  group: cleanup-history
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+
+jobs:
+  purge:
+    runs-on: ubuntu-latest
+    steps:
+      - name: 扫描 main 历史里需要清理的路径
+        id: scan
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          git clone --quiet "https://x-access-token:${GH_TOKEN}@github.com/${GITHUB_REPOSITORY}.git" repo
+          cd repo
+          before=$(git rev-list --count main)
+          files=$(git log main --pretty=format: --name-only --diff-filter=A | sort -u)
+          distn=$(printf '%s\n' "$files" | grep -c '^dist/' || true)
+          draftn=$(printf '%s\n' "$files" | grep -c '^commit-msg\.txt$' || true)
+          echo "main 提交数 = $before"
+          echo "  历史里出现过 dist/ 文件 $distn 个"
+          echo "  历史里出现过 commit-msg.txt $draftn 次"
+          {
+            echo "before=$before"
+            echo "dirty=$(( distn + draftn ))"
+          } >> "$GITHUB_OUTPUT"
+
+      - name: main 已是干净的
+        if: steps.scan.outputs.dirty == '0'
+        run: echo "✅ main 历史里没有产物/草稿文件，无需清理"
+
+      - name: 重写 main 历史并强推
+        if: steps.scan.outputs.dirty != '0'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          pip install --quiet git-filter-repo
+          cd repo
+          git filter-repo --invert-paths \
+            --path dist --path commit-msg.txt \
+            --refs refs/heads/main --force
+          git remote add origin "https://x-access-token:${GH_TOKEN}@github.com/${GITHUB_REPOSITORY}.git"
+          git push --force origin main
+          echo "清理后 main 提交数 = $(git rev-list --count main)"
+          echo "⚠️ main 的提交 SHA 已全部变化，本地 clone 需重新拉取"
+
+      - name: 清理后核验
+        if: steps.scan.outputs.dirty != '0'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          rm -rf verify && git clone --quiet \
+            "https://x-access-token:${GH_TOKEN}@github.com/${GITHUB_REPOSITORY}.git" verify
+          cd verify
+          left=$(git log main --pretty=format: --name-only --diff-filter=A | grep -c '^dist/' || true)
+          echo "清理后 main 历史里 dist/ 文件数 = $left"
+          test "$left" -eq 0 && echo "✅ 已清除" || { echo "❌ 仍有残留"; exit 1; }

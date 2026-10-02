@@ -11,21 +11,39 @@
   ],
   "outbounds": [
     { "tag": "direct", "protocol": "freedom" },
+    { "tag": "proxy", "protocol": "freedom" },
     { "tag": "blocked", "protocol": "blackhole" }
   ],
   "routing": {
     "domainStrategy": "IPIfNonMatch",
     "rules": [
-      { "type": "field", "outboundTag": "blocked",
-        "domain": ["ext:self-geosite.dat:self-reject"] },
+      {
+        "type": "field",
+        "outboundTag": "blocked",
+        "domain": ["ext:self-geosite.dat:self-reject"]
+      },
+      {
+        "type": "field",
+        "outboundTag": "proxy",
+        "domain": ["ext:self-geosite.dat:self-proxy"]
+      },
       {
         "type": "field",
         "outboundTag": "direct",
-        "domain": ["ext:self-geosite.dat:self-direct"],
-        "ip": ["ext:self-geoip.dat:self-direct", "geoip:private"]
+        "domain": [
+          "ext:self-geosite.dat:china-direct",
+          "ext:self-geosite.dat:self-direct"
+        ],
+        "ip": [
+          "ext:self-geoip.dat:self-direct",
+          "geoip:private"
+        ]
       },
-      { "type": "field", "outboundTag": "direct",
-        "domain": ["ext:self-geosite.dat:self-proxy"] }
+      {
+        "type": "field",
+        "outboundTag": "proxy",
+        "network": "tcp,udp"
+      }
     ]
   }
 }
