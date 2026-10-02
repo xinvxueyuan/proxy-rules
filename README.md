@@ -11,8 +11,8 @@
 
 | 产物 | 用途 | 地址 |
 |---|---|---|
-| `geosite.dat` | Xray 域名规则集（`ext:geosite.dat:<tag>`） | `https://github.com/xinvxueyuan/proxy-rules/releases/latest/download/geosite.dat` |
-| `geoip.dat` | Xray IP 规则集（`ext:geoip.dat:<tag>`） | `https://github.com/xinvxueyuan/proxy-rules/releases/latest/download/geoip.dat` |
+| `self-geosite.dat` | Xray 域名规则集（`ext:self-geosite.dat:<tag>`） | `https://github.com/xinvxueyuan/proxy-rules/releases/latest/download/self-geosite.dat` |
+| `self-geoip.dat` | Xray IP 规则集（`ext:self-geoip.dat:<tag>`） | `https://github.com/xinvxueyuan/proxy-rules/releases/latest/download/self-geoip.dat` |
 | `dist/clash/*.yaml` | mihomo rule-provider | `https://raw.githubusercontent.com/xinvxueyuan/proxy-rules/main/dist/clash/<name>.yaml` |
 | `dist/clash/MANIFEST.json` | 每个产物的 behavior / 条数 / sha256 | 同上目录 |
 
@@ -25,8 +25,8 @@
 | `self-reject` | `self-reject.yaml` | `domain` | 广告 / 跟踪 / 统计，拒掉 |
 | `self-direct` | `self-direct-ip.yaml` | `ipcidr` | 直连 IP（国内公共 DNS 等） |
 
-> 注：Xray 侧域名与 IP 是两个维度、**同名 tag 可以并存**（`ext:geosite.dat:self-direct`
-> 与 `ext:geoip.dat:self-direct`）；Clash 侧则要拆成两个文件（`behavior` 不同）。
+> 注：Xray 侧域名与 IP 是两个维度、**同名 tag 可以并存**（`ext:self-geosite.dat:self-direct`
+> 与 `ext:self-geoip.dat:self-direct`）；Clash 侧则要拆成两个文件（`behavior` 不同）。
 
 ## 用法
 
@@ -86,12 +86,12 @@ XRAY_LOCATION_ASSET=/usr/local/share/xray xray run -c /etc/xray/config.json
     "domainStrategy": "IPIfNonMatch",
     "rules": [
       { "type": "field", "outboundTag": "blocked",
-        "domain": ["ext:geosite.dat:self-reject", "geosite:category-ads-all"] },
+        "domain": ["ext:self-geosite.dat:self-reject", "geosite:category-ads-all"] },
       { "type": "field", "outboundTag": "direct",
-        "domain": ["ext:geosite.dat:self-direct", "geosite:cn"],
-        "ip": ["ext:geoip.dat:self-direct", "geoip:private"] },
+        "domain": ["ext:self-geosite.dat:self-direct", "geosite:cn"],
+        "ip": ["ext:self-geoip.dat:self-direct", "geoip:private"] },
       { "type": "field", "outboundTag": "proxy",
-        "domain": ["ext:geosite.dat:self-proxy"] },
+        "domain": ["ext:self-geosite.dat:self-proxy"] },
       { "type": "field", "outboundTag": "proxy", "network": "tcp,udp" }
     ]
   }
@@ -105,14 +105,23 @@ Xray 还支持**按 URL 热更新** `.dat`（不用重启、不用手动 scp）�
   "geodata": {
     "cron": "@daily",
     "assets": [
-      { "url": "https://github.com/xinvxueyuan/proxy-rules/releases/latest/download/geosite.dat",
-        "file": "geosite.dat" },
-      { "url": "https://github.com/xinvxueyuan/proxy-rules/releases/latest/download/geoip.dat",
-        "file": "geoip.dat" }
+      { "url": "https://github.com/xinvxueyuan/proxy-rules/releases/latest/download/self-geosite.dat",
+        "file": "self-geosite.dat" },
+      { "url": "https://github.com/xinvxueyuan/proxy-rules/releases/latest/download/self-geoip.dat",
+        "file": "self-geoip.dat" }
     ]
   }
 }
 ```
+
+### ⚠️ 产物为什么不叫 `geosite.dat` / `geoip.dat`
+
+Xray 的 `geosite:` / `geoip:` 内置引用读的是资源目录里**固定文件名** `geosite.dat` / `geoip.dat`。
+自建产物若用这两个名字，一旦放进资源目录就会**把官方那份顶掉** —— 于是配置里并写的
+`geosite:cn`、`geoip:private` 全部解析失败（实测报 `illegal ip rule: geoip:private ... EOF`）。
+
+所以自建产物用 `self-` 前缀：与官方 dat **并存**，`ext:self-geosite.dat:<tag>` 引用自建，
+`geosite:<tag>` 引用官方，两边互不遮蔽。CI 的校验步骤就是把两份同时放进资源目录跑的。
 
 ## 编辑规则（唯一入口：`data/`）
 

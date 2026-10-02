@@ -14,7 +14,7 @@
       "action": "output",
       "args": {
         "outputDir": "./dist/xray",
-        "outputName": "geoip.dat"
+        "outputName": "self-geoip.dat"
       }
     }
   ]

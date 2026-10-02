@@ -17,15 +17,15 @@
     "domainStrategy": "IPIfNonMatch",
     "rules": [
       { "type": "field", "outboundTag": "blocked",
-        "domain": ["ext:geosite.dat:self-reject"] },
+        "domain": ["ext:self-geosite.dat:self-reject"] },
       {
         "type": "field",
         "outboundTag": "direct",
-        "domain": ["ext:geosite.dat:self-direct"],
-        "ip": ["ext:geoip.dat:self-direct", "geoip:private"]
+        "domain": ["ext:self-geosite.dat:self-direct"],
+        "ip": ["ext:self-geoip.dat:self-direct", "geoip:private"]
       },
       { "type": "field", "outboundTag": "direct",
-        "domain": ["ext:geosite.dat:self-proxy"] }
+        "domain": ["ext:self-geosite.dat:self-proxy"] }
     ]
   }
 }
