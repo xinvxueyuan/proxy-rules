@@ -69,7 +69,7 @@ echo
 echo "======== 准备：Xray 内核 ========"
 readarray -t XR < <(latest_asset "XTLS/Xray-core" "$XR_PAT")
 echo "Xray 版本: ${XR[0]}"
-curl -fsSL -o "$WTMP/xray.zip" "${XR[1]}"
+curl -fsSL --retry 4 --retry-delay 2 --retry-all-errors -o "$WTMP/xray.zip" "${XR[1]}"
 rm -rf "$TMP/xray" && mkdir -p "$TMP/xray"
 unzip -oq "$WTMP/xray.zip" -d "$WTMP/xray"
 XR_FOUND="$(find "$TMP/xray" -type f -name "xray*" 2>/dev/null | head -1)"
@@ -84,9 +84,9 @@ ASSET="$ROOT/build/verify/asset"
 WASSET="$WTMP/asset"
 rm -rf "$ASSET" && mkdir -p "$ASSET"
 cp "$ROOT/dist/xray/"*.dat "$ASSET/"
-curl -fsSL -o "$WASSET/geosite.dat" \
+curl -fsSL --retry 4 --retry-delay 2 --retry-all-errors -o "$WASSET/geosite.dat" \
   "https://github.com/v2fly/domain-list-community/releases/latest/download/dlc.dat"
-curl -fsSL -o "$WASSET/geoip.dat" \
+curl -fsSL --retry 4 --retry-delay 2 --retry-all-errors -o "$WASSET/geoip.dat" \
   "https://github.com/v2fly/geoip/releases/latest/download/geoip.dat"
 export XRAY_LOCATION_ASSET="$WASSET"
 DAT="$ASSET/self-geosite.dat"
@@ -134,19 +134,26 @@ echo "======== 准备：mihomo 内核 ========"
 readarray -t MH < <(latest_asset "MetaCubeX/mihomo" "$MH_PAT")
 echo "mihomo 版本: ${MH[0]}"
 if [ "$PLAT" = windows ]; then
-  curl -fsSL -o "$WTMP/mihomo.zip" "${MH[1]}"
+  curl -fsSL --retry 4 --retry-delay 2 --retry-all-errors -o "$WTMP/mihomo.zip" "${MH[1]}"
   rm -rf "$TMP/mihomo-dir" && mkdir -p "$TMP/mihomo-dir"
   unzip -oq "$WTMP/mihomo.zip" -d "$WTMP/mihomo-dir"
 else
-  curl -fsSL -o "$WTMP/mihomo.gz" "${MH[1]}"
+  curl -fsSL --retry 4 --retry-delay 2 --retry-all-errors -o "$WTMP/mihomo.gz" "${MH[1]}"
   gunzip -f "$WTMP/mihomo.gz"
 fi
-# 资产名带版本后缀（如 mihomo-windows-amd64-compatible-alpha-9f053c4.exe），
-# 所以按通配找、并把可执行位置显式确定下来；找不到就直接失败，
-# **不要**回退到别的文件（曾回退到残留的 Linux 二进制 → WinError 193，误导排查方向）。
-MH_FOUND="$(find "$TMP/mihomo-dir" -type f -name "mihomo*" 2>/dev/null | head -1)"
-if [ -z "$MH_FOUND" ]; then
-  echo "   ❌ 未在解压目录里找到 mihomo 可执行文件"; ls -l "$TMP/mihomo-dir" | sed 's/^/      /'; exit 1
+# 两个平台解出来的形态不同：Windows 是 zip → 解压出目录；Linux 是 .gz → 单个文件。
+# 资产名还带版本后缀（mihomo-windows-amd64-compatible-alpha-9f053c4.exe），
+# 所以按通配找。找不到就直接失败，**不要**回退到别的文件
+# （曾回退到残留的 Linux 二进制 → WinError 193，把排查方向带偏）。
+if [ "$PLAT" = windows ]; then
+  MH_FOUND="$(find "$TMP/mihomo-dir" -type f -name "mihomo*" 2>/dev/null | head -1)"
+  MH_DIRSHOW="$TMP/mihomo-dir"
+else
+  MH_FOUND="$TMP/mihomo"
+  MH_DIRSHOW="$TMP"
+fi
+if [ -z "$MH_FOUND" ] || [ ! -f "$MH_FOUND" ]; then
+  echo "   ❌ 未找到 mihomo 可执行文件"; ls -l "$MH_DIRSHOW" 2>/dev/null | sed 's/^/      /'; exit 1
 fi
 chmod +x "$MH_FOUND" 2>/dev/null || true
 MBIN="$(topath "$MH_FOUND")"
