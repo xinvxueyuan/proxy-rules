@@ -1,0 +1,74 @@
+name: build
+
+on:
+  push:
+    branches: [main]
+    paths-ignore: ["dist/**", "README.md", "LICENSE", "sources.yaml"]
+  schedule:
+    - cron: "0 19 * * *" # 每天 03:00 CST
+  workflow_dispatch:
+
+concurrency:
+  group: build-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version: stable
+          cache: false
+
+      - name: 生成 Clash rule-provider
+        run: python3 scripts/build_clash.py
+
+      - name: 生成 Xray geosite.dat / geoip.dat
+        run: bash scripts/build_xray.sh
+
+      - name: 用真实内核校验产物
+        run: bash scripts/verify.sh
+
+      - name: 刷新全量 sha256 清单
+        run: |
+          cd "$GITHUB_WORKSPACE"
+          find dist -type f ! -name MANIFEST.sha256 -print0 \
+            | sort -z | xargs -0 sha256sum > dist/MANIFEST.sha256
+          cat dist/MANIFEST.sha256
+
+      - name: 提交 dist 产物
+        run: |
+          cd "$GITHUB_WORKSPACE"
+          git config user.name  "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add dist
+          if git diff --cached --quiet; then
+            echo "产物无变化，跳过提交"
+          else
+            git commit -m "chore(dist): 自动构建产物 [skip ci]"
+            git push
+          fi
+
+      - name: 发布 .dat（固定 tag，地址稳定）
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          cd "$GITHUB_WORKSPACE"
+          gh release delete rules-latest --yes --cleanup-tag 2>/dev/null || true
+          gh release create rules-latest \
+            dist/xray/geosite.dat dist/xray/geoip.dat \
+            dist/MANIFEST.sha256 \
+            --title "rules $(date -u +%Y-%m-%d)" \
+            --notes "自持分流规则自动构建产物（geosite.dat / geoip.dat）。
+          提交：${{ github.sha }}
+          校验清单见 MANIFEST.sha256。"

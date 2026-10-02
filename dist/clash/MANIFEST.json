@@ -1,0 +1,37 @@
+{
+  "generated_by": "scripts/build_clash.py",
+  "artifacts": [
+    {
+      "name": "self-direct",
+      "file": "self-direct.yaml",
+      "source": "data/domains/self-direct",
+      "behavior": "domain",
+      "entries": 38,
+      "sha256": "50961d74b7bb26079293f6b74f69a9ad46eb81077bc7c4c3a1b53b943faa122e"
+    },
+    {
+      "name": "self-proxy",
+      "file": "self-proxy.yaml",
+      "source": "data/domains/self-proxy",
+      "behavior": "domain",
+      "entries": 83,
+      "sha256": "aa2890591a6e0e811f14fdb03039d49a34d4fdfab89a2594df191a6a04040ccf"
+    },
+    {
+      "name": "self-reject",
+      "file": "self-reject.yaml",
+      "source": "data/domains/self-reject",
+      "behavior": "domain",
+      "entries": 61,
+      "sha256": "f374d9ee8ae9e4342d4fc6afc2e5a9fd608e364049191c49d1bb5d9fb24106be"
+    },
+    {
+      "name": "self-direct-ip",
+      "file": "self-direct-ip.yaml",
+      "source": "data/ip/self-direct.txt",
+      "behavior": "ipcidr",
+      "entries": 9,
+      "sha256": "61359f3923cae32ae312888a83bd109bb246003f8264a7db77e348a6704ee31a"
+    }
+  ]
+}
