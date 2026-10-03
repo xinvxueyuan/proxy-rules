@@ -43,31 +43,74 @@ esac
 echo "平台: $PLAT（内核取对应平台的构建）"
 
 # 取仓库最新一个 release（含 pre-release）里匹配指定 asset 的下载地址，
-# 输出两行：版本号、下载地址（末尾 tr -d '\r' 解决上述 CRLF 问题）。
-latest_asset() {
+# 输出两行：版本号、下载地址。
+#
+# 三个健壮性要点（都是实测踩过才加的）：
+#   1) 末尾 `tr -d '\r'`：# Windows 上 python 写 stdout 是 CRLF，readarray 会把 \r
+#      带进元素，URL 变成 "...zip\r" 直接报 curl (3) Malformed input；
+#   2) API 要重试：GitHub 偶发返回 500（实测 2026-10-03 的每日构建就因此失败，
+#      现场是 `HTTP Error 500` 然后 `XR[0]: unbound variable`）。
+#      5xx/429 与网络错误会退避重试并采纳 Retry-After；4xx 其它情况重试无用，直接失败；
+#   3) 最后一次尝试失败后**不再等**，直接报错 —— 否则还要白等一个退避周期才失败。
+#      重试进度打到 stderr，避免污染 readarray 读的 stdout。
+latest_asset() { # $1=repo $2=asset 正则
   python3 - "$1" "$2" <<'PY' | tr -d '\r'
-import json, re, sys, urllib.request
+import json, re, sys, time, urllib.error, urllib.request
+
 repo, pat = sys.argv[1], re.compile(sys.argv[2])
+HEADERS = {"User-Agent": "proxy-rules-ci", "Accept": "application/vnd.github+json"}
+RETRYABLE = (429, 500, 502, 503, 504)
+MAX_ATTEMPTS = 6
+
+
 def get(url):
-    req = urllib.request.Request(url, headers={"User-Agent": "proxy-rules-ci"})
-    with urllib.request.urlopen(req, timeout=30) as r:
-        return json.load(r)
+    last = None
+    for attempt in range(MAX_ATTEMPTS):
+        try:
+            req = urllib.request.Request(url, headers=HEADERS)
+            with urllib.request.urlopen(req, timeout=30) as r:
+                return json.load(r)
+        except urllib.error.HTTPError as e:
+            last = f"HTTP {e.code}"
+            if e.code not in RETRYABLE:
+                raise
+            wait = min(2 ** attempt, 20)
+            ra = (e.headers.get("Retry-After") if e.headers else None) or ""
+            if ra.isdigit():
+                wait = max(wait, min(int(ra), 30))
+        except (urllib.error.URLError, TimeoutError, OSError) as e:
+            last = f"{type(e).__name__}: {e}"
+            wait = min(2 ** attempt, 20)
+        if attempt == MAX_ATTEMPTS - 1:
+            break  # 最后一次失败不再等，省一个退避周期
+        print(f"    [retry] {last}，{wait}s 后重试（第 {attempt + 1}/{MAX_ATTEMPTS} 次）",
+              file=sys.stderr)
+        time.sleep(wait)
+    raise SystemExit(f"GitHub API 持续失败（已重试 {MAX_ATTEMPTS} 次）：{last}")
+
+
 rels = get(f"https://api.github.com/repos/{repo}/releases")
-if not rels:
-    sys.exit("no releases")
+if not isinstance(rels, list) or not rels:
+    raise SystemExit(f"{repo}: releases 列表为空")
 tag = rels[0]["tag_name"]
 for a in rels[0].get("assets", []):
     if pat.search(a["name"]):
         print(tag)
         print(a["browser_download_url"])
         sys.exit(0)
-sys.exit(f"no asset matching {pat.pattern} in {tag}")
+raise SystemExit(f"{repo} {tag}: 没有匹配 {pat.pattern} 的资产")
 PY
 }
 
 echo
 echo "======== 准备：Xray 内核 ========"
-readarray -t XR < <(latest_asset "XTLS/Xray-core" "$XR_PAT")
+readarray -t XR < <(latest_asset "XTLS/Xray-core" "$XR_PAT" || true)
+# 取不到就直接报清楚：set -u 下 `${XR[0]}` 会抛 "unbound variable"，
+# 那句话会把真正的失败原因（API 挂了 / 资产改名）完全掩盖掉。
+if [ "${#XR[@]}" -lt 2 ]; then
+  echo "   ❌ 无法取得 Xray 内核信息（API 失败或资产改名；匹配 $XR_PAT）"
+  exit 1
+fi
 echo "Xray 版本: ${XR[0]}"
 curl -fsSL --retry 4 --retry-delay 2 --retry-all-errors -o "$WTMP/xray.zip" "${XR[1]}"
 rm -rf "$TMP/xray" && mkdir -p "$TMP/xray"
@@ -131,7 +174,13 @@ fi
 
 echo
 echo "======== 准备：mihomo 内核 ========"
-readarray -t MH < <(latest_asset "MetaCubeX/mihomo" "$MH_PAT")
+readarray -t MH < <(latest_asset "MetaCubeX/mihomo" "$MH_PAT" || true)
+# 取不到就直接报清楚：set -u 下 `${MH[0]}` 会抛 "unbound variable"，
+# 那句话会把真正的失败原因（API 挂了 / 资产改名）完全掩盖掉。
+if [ "${#MH[@]}" -lt 2 ]; then
+  echo "   ❌ 无法取得 mihomo 内核信息（API 失败或资产改名；匹配 $MH_PAT）"
+  exit 1
+fi
 echo "mihomo 版本: ${MH[0]}"
 if [ "$PLAT" = windows ]; then
   curl -fsSL --retry 4 --retry-delay 2 --retry-all-errors -o "$WTMP/mihomo.zip" "${MH[1]}"
