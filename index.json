@@ -1,0 +1,154 @@
+{
+  "generated_by": "scripts/build_docs.py",
+  "pages_base": "https://xinvxueyuan.github.io/proxy-rules",
+  "repo": "https://github.com/xinvxueyuan/proxy-rules",
+  "artifacts": [
+    {
+      "tag": "advert.cn",
+      "behavior": "domain",
+      "entries": 1755,
+      "file": "advert.cn.yaml",
+      "url": "https://xinvxueyuan.github.io/proxy-rules/clash/advert.cn.yaml"
+    },
+    {
+      "tag": "advert.com",
+      "behavior": "domain",
+      "entries": 51649,
+      "file": "advert.com.yaml",
+      "url": "https://xinvxueyuan.github.io/proxy-rules/clash/advert.com.yaml"
+    },
+    {
+      "tag": "advert.fb",
+      "behavior": "domain",
+      "entries": 6,
+      "file": "advert.fb.yaml",
+      "url": "https://xinvxueyuan.github.io/proxy-rules/clash/advert.fb.yaml"
+    },
+    {
+      "tag": "advert.gg",
+      "behavior": "domain",
+      "entries": 45,
+      "file": "advert.gg.yaml",
+      "url": "https://xinvxueyuan.github.io/proxy-rules/clash/advert.gg.yaml"
+    },
+    {
+      "tag": "advert.ms",
+      "behavior": "domain",
+      "entries": 396,
+      "file": "advert.ms.yaml",
+      "url": "https://xinvxueyuan.github.io/proxy-rules/clash/advert.ms.yaml"
+    },
+    {
+      "tag": "advert.org",
+      "behavior": "domain",
+      "entries": 1,
+      "file": "advert.org.yaml",
+      "url": "https://xinvxueyuan.github.io/proxy-rules/clash/advert.org.yaml"
+    },
+    {
+      "tag": "advert.tg",
+      "behavior": "domain",
+      "entries": 3,
+      "file": "advert.tg.yaml",
+      "url": "https://xinvxueyuan.github.io/proxy-rules/clash/advert.tg.yaml"
+    },
+    {
+      "tag": "advert.x",
+      "behavior": "domain",
+      "entries": 10,
+      "file": "advert.x.yaml",
+      "url": "https://xinvxueyuan.github.io/proxy-rules/clash/advert.x.yaml"
+    },
+    {
+      "tag": "self-direct",
+      "behavior": "domain",
+      "entries": 38,
+      "file": "self-direct.yaml",
+      "url": "https://xinvxueyuan.github.io/proxy-rules/clash/self-direct.yaml"
+    },
+    {
+      "tag": "self-proxy",
+      "behavior": "domain",
+      "entries": 83,
+      "file": "self-proxy.yaml",
+      "url": "https://xinvxueyuan.github.io/proxy-rules/clash/self-proxy.yaml"
+    },
+    {
+      "tag": "site.cn",
+      "behavior": "domain",
+      "entries": 111466,
+      "file": "site.cn.yaml",
+      "url": "https://xinvxueyuan.github.io/proxy-rules/clash/site.cn.yaml"
+    },
+    {
+      "tag": "site.cn.edu",
+      "behavior": "domain",
+      "entries": 33,
+      "file": "site.cn.edu.yaml",
+      "url": "https://xinvxueyuan.github.io/proxy-rules/clash/site.cn.edu.yaml"
+    },
+    {
+      "tag": "site.cn.fin",
+      "behavior": "domain",
+      "entries": 78,
+      "file": "site.cn.fin.yaml",
+      "url": "https://xinvxueyuan.github.io/proxy-rules/clash/site.cn.fin.yaml"
+    },
+    {
+      "tag": "site.cn.gov",
+      "behavior": "domain",
+      "entries": 15,
+      "file": "site.cn.gov.yaml",
+      "url": "https://xinvxueyuan.github.io/proxy-rules/clash/site.cn.gov.yaml"
+    },
+    {
+      "tag": "site.cn.life",
+      "behavior": "domain",
+      "entries": 61,
+      "file": "site.cn.life.yaml",
+      "url": "https://xinvxueyuan.github.io/proxy-rules/clash/site.cn.life.yaml"
+    },
+    {
+      "tag": "site.cn.map",
+      "behavior": "domain",
+      "entries": 12,
+      "file": "site.cn.map.yaml",
+      "url": "https://xinvxueyuan.github.io/proxy-rules/clash/site.cn.map.yaml"
+    },
+    {
+      "tag": "site.cn.med",
+      "behavior": "domain",
+      "entries": 24,
+      "file": "site.cn.med.yaml",
+      "url": "https://xinvxueyuan.github.io/proxy-rules/clash/site.cn.med.yaml"
+    },
+    {
+      "tag": "site.cn.media",
+      "behavior": "domain",
+      "entries": 60,
+      "file": "site.cn.media.yaml",
+      "url": "https://xinvxueyuan.github.io/proxy-rules/clash/site.cn.media.yaml"
+    },
+    {
+      "tag": "site.cn.shop",
+      "behavior": "domain",
+      "entries": 48,
+      "file": "site.cn.shop.yaml",
+      "url": "https://xinvxueyuan.github.io/proxy-rules/clash/site.cn.shop.yaml"
+    },
+    {
+      "tag": "site.cn.travel",
+      "behavior": "domain",
+      "entries": 49,
+      "file": "site.cn.travel.yaml",
+      "url": "https://xinvxueyuan.github.io/proxy-rules/clash/site.cn.travel.yaml"
+    },
+    {
+      "tag": "self-direct-ip",
+      "behavior": "ipcidr",
+      "entries": 9,
+      "file": "self-direct-ip.yaml",
+      "url": "https://xinvxueyuan.github.io/proxy-rules/clash/self-direct-ip.yaml"
+    }
+  ]
+}

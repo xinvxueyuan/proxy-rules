@@ -1,0 +1,347 @@
+{
+  "fetched_by": "scripts/fetch_upstream.py",
+  "built_at": "2026-10-03 23:34 UTC",
+  "sources": [
+    {
+      "tag": "site.cn",
+      "url": "https://raw.githubusercontent.com/Loyalsoldier/clash-rules/release/direct.txt",
+      "format": "clash-domain",
+      "repo": "Loyalsoldier/clash-rules",
+      "license": "GPL-3.0",
+      "purpose": "国内域名直连（「国内直连、其余走代理兜底」里的那份『国内』）",
+      "internal": false,
+      "raw_bytes": 2303610,
+      "raw_sha256": "e1664a48aa5ffc62bd4941787db59446335cc933d3c39ff083e4000ae9c5993b",
+      "entries": {
+        "suffix": 110799,
+        "exact": 554
+      }
+    },
+    {
+      "tag": "advert.base",
+      "url": "https://raw.githubusercontent.com/hagezi/dns-blocklists/main/wildcard/light-onlydomains.txt",
+      "format": "domains",
+      "repo": "hagezi/dns-blocklists",
+      "license": "GPL-3.0",
+      "purpose": "广告/追踪底座（参与分类，不直接出产物）",
+      "internal": true,
+      "raw_bytes": 1047964,
+      "raw_sha256": "3672577a33cb6565ad62220bfaa82edf50f172a812c9b479487d8ad556a92da9",
+      "entries": {
+        "suffix": 51311,
+        "exact": 0
+      }
+    },
+    {
+      "tag": "native.winoffice",
+      "url": "https://raw.githubusercontent.com/hagezi/dns-blocklists/main/wildcard/native.winoffice-onlydomains.txt",
+      "format": "domains",
+      "repo": "hagezi/dns-blocklists",
+      "license": "GPL-3.0",
+      "purpose": "微软设备遥测",
+      "internal": true,
+      "raw_bytes": 12697,
+      "raw_sha256": "dcbc1b7b1b07bd2ed359baf8ed61238a242a4c045d961780d03437ea25b7f7d9",
+      "entries": {
+        "suffix": 384,
+        "exact": 0
+      }
+    },
+    {
+      "tag": "native.xiaomi",
+      "url": "https://raw.githubusercontent.com/hagezi/dns-blocklists/main/wildcard/native.xiaomi-onlydomains.txt",
+      "format": "domains",
+      "repo": "hagezi/dns-blocklists",
+      "license": "GPL-3.0",
+      "purpose": "小米设备遥测",
+      "internal": true,
+      "raw_bytes": 9342,
+      "raw_sha256": "1faedc33691a5c0c5b2cbf78cb721e7c32f6a5dda26aee9ce4cf0914094fe94a",
+      "entries": {
+        "suffix": 345,
+        "exact": 0
+      }
+    },
+    {
+      "tag": "native.huawei",
+      "url": "https://raw.githubusercontent.com/hagezi/dns-blocklists/main/wildcard/native.huawei-onlydomains.txt",
+      "format": "domains",
+      "repo": "hagezi/dns-blocklists",
+      "license": "GPL-3.0",
+      "purpose": "华为设备遥测",
+      "internal": true,
+      "raw_bytes": 5795,
+      "raw_sha256": "d64494372926b71a68771ef91a625c8db27f826524c7477e3bf12af14cc097f7",
+      "entries": {
+        "suffix": 135,
+        "exact": 0
+      }
+    },
+    {
+      "tag": "native.vivo",
+      "url": "https://raw.githubusercontent.com/hagezi/dns-blocklists/main/wildcard/native.vivo-onlydomains.txt",
+      "format": "domains",
+      "repo": "hagezi/dns-blocklists",
+      "license": "GPL-3.0",
+      "purpose": "vivo 设备遥测",
+      "internal": true,
+      "raw_bytes": 7629,
+      "raw_sha256": "1a006e6e3bffcbcabfd73b775b1c608fb3934e28156841104415052facf9020b",
+      "entries": {
+        "suffix": 240,
+        "exact": 0
+      }
+    },
+    {
+      "tag": "native.oppo-realme",
+      "url": "https://raw.githubusercontent.com/hagezi/dns-blocklists/main/wildcard/native.oppo-realme-onlydomains.txt",
+      "format": "domains",
+      "repo": "hagezi/dns-blocklists",
+      "license": "GPL-3.0",
+      "purpose": "OPPO / realme 设备遥测",
+      "internal": true,
+      "raw_bytes": 15218,
+      "raw_sha256": "1db11c666fbaa34e8359d92e12c29cb8572b0d8bd9093a6c33eb42e4f676fd42",
+      "entries": {
+        "suffix": 488,
+        "exact": 0
+      }
+    },
+    {
+      "tag": "native.apple",
+      "url": "https://raw.githubusercontent.com/hagezi/dns-blocklists/main/wildcard/native.apple-onlydomains.txt",
+      "format": "domains",
+      "repo": "hagezi/dns-blocklists",
+      "license": "GPL-3.0",
+      "purpose": "苹果设备遥测（无对应组，归入 advert.com 通用）",
+      "internal": true,
+      "raw_bytes": 3578,
+      "raw_sha256": "8e9631a6fb16c1ee3989fb4f8d89aac031305726fccfdc44c04afa940958ee9b",
+      "entries": {
+        "suffix": 106,
+        "exact": 0
+      }
+    },
+    {
+      "tag": "native.amazon",
+      "url": "https://raw.githubusercontent.com/hagezi/dns-blocklists/main/wildcard/native.amazon-onlydomains.txt",
+      "format": "domains",
+      "repo": "hagezi/dns-blocklists",
+      "license": "GPL-3.0",
+      "purpose": "亚马逊设备遥测（无对应组，归入 advert.com 通用）",
+      "internal": true,
+      "raw_bytes": 11155,
+      "raw_sha256": "c208c629ae578abc1e1497f49f2b2efa73a909945ede2e0fdd065335f6340d24",
+      "entries": {
+        "suffix": 368,
+        "exact": 0
+      }
+    },
+    {
+      "tag": "native.samsung",
+      "url": "https://raw.githubusercontent.com/hagezi/dns-blocklists/main/wildcard/native.samsung-onlydomains.txt",
+      "format": "domains",
+      "repo": "hagezi/dns-blocklists",
+      "license": "GPL-3.0",
+      "purpose": "三星设备遥测（无对应组，归入 advert.com 通用）",
+      "internal": true,
+      "raw_bytes": 6307,
+      "raw_sha256": "f3ff6ded350e3580cddd06ae9b2c82ddcdf7bc39187e714c5dd0c83fc8b5f8ff",
+      "entries": {
+        "suffix": 200,
+        "exact": 0
+      }
+    },
+    {
+      "tag": "native.tiktok",
+      "url": "https://raw.githubusercontent.com/hagezi/dns-blocklists/main/wildcard/native.tiktok-onlydomains.txt",
+      "format": "domains",
+      "repo": "hagezi/dns-blocklists",
+      "license": "GPL-3.0",
+      "purpose": "TikTok 遥测（无对应组，归入 advert.com 通用）",
+      "internal": true,
+      "raw_bytes": 13351,
+      "raw_sha256": "46affe57d6bccb30c3de6bc0ae010af9dec376295cc4c34c05fa504f01f95a76",
+      "entries": {
+        "suffix": 441,
+        "exact": 0
+      }
+    }
+  ],
+  "groups": {
+    "site.cn": {
+      "role": "group",
+      "label": "国内域名直连（上游大名单 ∪ 9 个手工分类组）",
+      "entries": {
+        "suffix": 0,
+        "exact": 0,
+        "total": 0
+      },
+      "note": "公共来源无内容，由手工层提供"
+    },
+    "advert.cn": {
+      "role": "group",
+      "label": "中文互联网隐私与追踪",
+      "entries": {
+        "suffix": 1746,
+        "exact": 0,
+        "total": 1746
+      }
+    },
+    "advert.com": {
+      "role": "group",
+      "label": "商业广告（通用广告网络 ∪ 下列各生态子组）",
+      "entries": {
+        "suffix": 51618,
+        "exact": 0,
+        "total": 51618
+      }
+    },
+    "advert.fb": {
+      "role": "group",
+      "label": "Meta 隐私与广告",
+      "entries": {
+        "suffix": 6,
+        "exact": 0,
+        "total": 6
+      }
+    },
+    "advert.gg": {
+      "role": "group",
+      "label": "谷歌隐私与广告",
+      "entries": {
+        "suffix": 40,
+        "exact": 0,
+        "total": 40
+      }
+    },
+    "advert.ms": {
+      "role": "group",
+      "label": "微软隐私与广告",
+      "entries": {
+        "suffix": 396,
+        "exact": 0,
+        "total": 396
+      }
+    },
+    "advert.org": {
+      "role": "group",
+      "label": "公益 / 非盈利广告（公共列表无源，纯自持）",
+      "entries": {
+        "suffix": 0,
+        "exact": 0,
+        "total": 0
+      },
+      "note": "公共来源无内容，由手工层提供"
+    },
+    "advert.tg": {
+      "role": "group",
+      "label": "Telegram 推广与追踪",
+      "entries": {
+        "suffix": 0,
+        "exact": 0,
+        "total": 0
+      },
+      "note": "公共来源无内容，由手工层提供"
+    },
+    "advert.x": {
+      "role": "group",
+      "label": "推特（X）隐私与广告",
+      "entries": {
+        "suffix": 7,
+        "exact": 0,
+        "total": 7
+      }
+    },
+    "site.cn.edu": {
+      "role": "group",
+      "label": "中国教育（通配根域名，手工保底）",
+      "entries": {
+        "suffix": 0,
+        "exact": 0,
+        "total": 0
+      },
+      "note": "公共来源无内容，由手工层提供"
+    },
+    "site.cn.fin": {
+      "role": "group",
+      "label": "中国金融（通配根域名，手工保底）",
+      "entries": {
+        "suffix": 0,
+        "exact": 0,
+        "total": 0
+      },
+      "note": "公共来源无内容，由手工层提供"
+    },
+    "site.cn.gov": {
+      "role": "group",
+      "label": "中国政务（通配根域名，手工保底）",
+      "entries": {
+        "suffix": 0,
+        "exact": 0,
+        "total": 0
+      },
+      "note": "公共来源无内容，由手工层提供"
+    },
+    "site.cn.life": {
+      "role": "group",
+      "label": "中国生活服务（通配根域名，手工保底）",
+      "entries": {
+        "suffix": 0,
+        "exact": 0,
+        "total": 0
+      },
+      "note": "公共来源无内容，由手工层提供"
+    },
+    "site.cn.map": {
+      "role": "group",
+      "label": "中国地图（通配根域名，手工保底）",
+      "entries": {
+        "suffix": 0,
+        "exact": 0,
+        "total": 0
+      },
+      "note": "公共来源无内容，由手工层提供"
+    },
+    "site.cn.med": {
+      "role": "group",
+      "label": "中国医疗（通配根域名，手工保底）",
+      "entries": {
+        "suffix": 0,
+        "exact": 0,
+        "total": 0
+      },
+      "note": "公共来源无内容，由手工层提供"
+    },
+    "site.cn.media": {
+      "role": "group",
+      "label": "中国媒体（通配根域名，手工保底）",
+      "entries": {
+        "suffix": 0,
+        "exact": 0,
+        "total": 0
+      },
+      "note": "公共来源无内容，由手工层提供"
+    },
+    "site.cn.shop": {
+      "role": "group",
+      "label": "中国购物（通配根域名，手工保底）",
+      "entries": {
+        "suffix": 0,
+        "exact": 0,
+        "total": 0
+      },
+      "note": "公共来源无内容，由手工层提供"
+    },
+    "site.cn.travel": {
+      "role": "group",
+      "label": "中国出行（通配根域名，手工保底）",
+      "entries": {
+        "suffix": 0,
+        "exact": 0,
+        "total": 0
+      },
+      "note": "公共来源无内容，由手工层提供"
+    }
+  }
+}
