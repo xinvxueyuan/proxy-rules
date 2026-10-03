@@ -20,7 +20,7 @@
 - [分流模型](#分流模型)
 - [规则组](#规则组)
 - [九类中国站点保底直连](#九类中国站点保底直连)
-- [必读：三个实测确认的坑](#必读三个实测确认的坑)
+- [必读：四个实测确认的坑](#必读四个实测确认的坑)
 - [编辑规则](#编辑规则)
 - [构建与校验](#构建与校验)
 - [目录结构](#目录结构)
@@ -81,7 +81,20 @@ rules:
 
 ### Xray
 
+**首次部署必须先放一次 dat**（`geodata` 是「配置校验通过后才下载」，不能做首次引导 ——
+文件不存在时配置校验会直接失败退出，详见[必读](#必读四个实测确认的坑)）：
+
 ```bash
+mkdir -p /usr/local/share/xray && cd /usr/local/share/xray
+
+# 自建规则集
+curl -fsSLO https://xinvxueyuan.github.io/proxy-rules/xray/self-geosite.dat
+curl -fsSLO https://xinvxueyuan.github.io/proxy-rules/xray/self-geoip.dat
+
+# 官方 dat 也要在（geoip:cn / geoip:private 等内置引用需要）
+curl -fsSLo geosite.dat https://github.com/v2fly/domain-list-community/releases/latest/download/dlc.dat
+curl -fsSLo geoip.dat   https://github.com/v2fly/geoip/releases/latest/download/geoip.dat
+
 XRAY_LOCATION_ASSET=/usr/local/share/xray xray run -c /etc/xray/config.json
 ```
 
@@ -116,7 +129,7 @@ XRAY_LOCATION_ASSET=/usr/local/share/xray xray run -c /etc/xray/config.json
 完整片段见 [`examples/xray.json`](https://xinvxueyuan.github.io/proxy-rules/examples/xray.json)。
 
 > **`domain` 与 `ip` 必须拆成两条规则** —— 同一条规则里两者是 AND，混写会永不命中
-> 而 `xray run -test` 照样通过。详见[必读](#必读三个实测确认的坑)。
+> 而 `xray run -test` 照样通过；另外 `geodata` **不能**做首次引导。详见[必读](#必读四个实测确认的坑)。
 
 ---
 
@@ -225,7 +238,7 @@ XRAY_LOCATION_ASSET=/usr/local/share/xray xray run -c /etc/xray/config.json
 
 ---
 
-## 必读：三个实测确认的坑
+## 必读：四个实测确认的坑
 
 ### 1. 自建产物不能叫 `geosite.dat` / `geoip.dat`
 
@@ -240,7 +253,21 @@ Xray 的 `geosite:` / `geoip:` 内置引用读的是资源目录里**固定文�
 结果落到下一条兜底规则 → 证明是 AND。混写会让这条规则**永不命中**，
 而 `run -test` 依然通过（配置合法），属最难看出来的失效。
 
-### 3. tag 名带点可用，但官方 dlc 生成不出来
+### 3. Xray 的 `geodata` 不能做首次引导
+
+实测：`geodata` 是**先校验路由规则、后下载资产**。首次部署时 `ext:` 引用的 dat 还不存在，
+配置校验就失败、进程退出：
+
+```
+infra/conf: illegal domain rule: ext:self-geosite.dat:advert.com >
+common/geodata: failed to open self-geosite.dat > no such file or directory
+```
+
+所以**必须先手动下载一次**（见上面的快速开始），之后 `geodata` 的 `cron` 才能接管更新
+（日志会打印 `scheduled geodata reload with cron: @daily`）。
+用 `curl -fsSLO` 做这一步即可，Pages 地址稳定可直接写进运维脚本。
+
+### 4. tag 名带点可用，但官方 dlc 生成不出来
 
 - **Xray 接受**带点的 tag（`ext:self-geosite.dat:advert.com` 与 `:SITE.CN` 都能用，大小写不敏感）；
   写不存在的 tag 会直接报错 —— 好事：能起来就等于 tag 真存在。

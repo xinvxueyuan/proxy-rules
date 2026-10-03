@@ -119,6 +119,9 @@ def xray_snippet() -> str:
                 {"type": "field", "outboundTag": "proxy", "network": "tcp,udp"},
             ],
         },
+        "_bootstrap": "首次部署必须先手动下载一次 self-*.dat 放到资源目录："
+                      "geodata 是「配置校验通过后才下载」，不能做首次引导（文件不存在时校验直接失败）。"
+                      "例：curl -fsSLO https://xinvxueyuan.github.io/proxy-rules/xray/self-geosite.dat",
         "geodata": {
             "cron": "@daily",
             "assets": [
@@ -223,6 +226,17 @@ def render_html(labels: dict[str, str], manifest: dict, built_at: str) -> str:
 
   <h2>Xray</h2>
   <pre><code>{e(xray_snippet())}</code></pre>
+  <div class="note">
+    <strong>首次部署必须先放一次 dat</strong>：<code>geodata</code> 是「配置校验通过后才下载」，
+    <strong>不能</strong>做首次引导 —— 文件不存在时配置校验直接失败退出
+    （<code>failed to open self-geosite.dat</code>）。先执行：
+    <pre><code>mkdir -p /usr/local/share/xray &amp;&amp; cd /usr/local/share/xray
+curl -fsSLO {e(PAGES_BASE)}/xray/self-geosite.dat
+curl -fsSLO {e(PAGES_BASE)}/xray/self-geoip.dat
+curl -fsSLo geosite.dat https://github.com/v2fly/domain-list-community/releases/latest/download/dlc.dat
+curl -fsSLo geoip.dat   https://github.com/v2fly/geoip/releases/latest/download/geoip.dat</code></pre>
+    之后 <code>geodata</code> 的 cron 才会接管更新。
+  </div>
   <div class="note">
     自建产物命名为 <code>self-geosite.dat</code> / <code>self-geoip.dat</code>，
     避免与官方同名文件互相遮蔽（同名会让并写的 <code>geosite:cn</code>、
