@@ -8,7 +8,7 @@
 > 自用分流规则：**一份自持数据**，编译成 **mihomo（Clash.Meta）** 与 **Xray** 两种格式，每日定时构建并发布。
 
 - 📖 **文档与订阅地址**：<https://xinvxueyuan.github.io/proxy-rules/>
-- 📦 **最新产物**：[Releases](https://github.com/xinvxueyuan/proxy-rules/releases/latest) ｜ [dist 分支](https://github.com/xinvxueyuan/proxy-rules/tree/dist)
+- 📦 **产物分支**：[dist](https://github.com/xinvxueyuan/proxy-rules/tree/dist)（单快照，无历史版本）
 - ⚙️ **每日构建**：UTC 19:00（北京时间 03:00），也可手动触发
 
 ---
@@ -135,23 +135,29 @@ XRAY_LOCATION_ASSET=/usr/local/share/xray xray run -c /etc/xray/config.json
 
 ## 订阅地址
 
-三种取法内容相同，按场景选择：
+**唯一订阅基址**（每日构建后单快照覆盖，**没有历史版本**，任何时刻取到的都是最新一次构建）：
 
-| 方式 | 基址 | 特点 |
-|---|---|---|
-| **GitHub Pages**（推荐） | `https://xinvxueyuan.github.io/proxy-rules/clash/<tag>.yaml` | CDN、地址固定；更新可能滞后几分钟（缓存） |
-| raw 分支直链 | `https://raw.githubusercontent.com/xinvxueyuan/proxy-rules/dist/clash/<tag>.yaml` | 取最新即时，无需 Pages |
-| Release 资产 | `https://github.com/xinvxueyuan/proxy-rules/releases/latest/download/<文件>` | 两个 `.dat` 与规则文件的稳定下载地址 |
+```
+https://xinvxueyuan.github.io/proxy-rules/
+```
 
-两个 Xray 二进制（只在 Pages / Release 上，不在 `clash/` 目录里）：
+在该基址下按 tag 取文件：
 
-- `https://xinvxueyuan.github.io/proxy-rules/xray/self-geosite.dat`
-- `https://xinvxueyuan.github.io/proxy-rules/xray/self-geoip.dat`
+| 用途 | 路径 |
+|---|---|
+| Clash / mihomo rule-provider | `<基址>/clash/<tag>.yaml` |
+| Xray 域名规则集 | `<基址>/xray/self-geosite.dat` |
+| Xray IP 规则集 | `<基址>/xray/self-geoip.dat` |
+| 产物索引（机器可读） | `<基址>/index.json` |
+| 产物校验和 | `<基址>/MANIFEST.sha256` |
+| 上游来源与构建时间 | `<基址>/PROVENANCE.json` |
 
-国内可达性差的网络里可把 `raw.githubusercontent.com` 换成 jsDelivr：
-`https://cdn.jsdelivr.net/gh/xinvxueyuan/proxy-rules@dist/clash/<tag>.yaml`
-
-机器可读的产物索引：<https://xinvxueyuan.github.io/proxy-rules/index.json>
+> 客户端仍按 tag 引多个 rule-provider（拦截 / 直连 / 代理是不同动作，必须分开），
+> 但**地址只有一个前缀** —— 不再提供 raw 直链或 Release 资产这样的第二渠道，
+> 避免客户端配到不同来源却在文档里看起来一样。
+>
+> 站点由构建流程自动生成、与产物一起发布，所以**页面上的文件与订阅内容永远同一次构建**。
+> Pages 有 CDN 缓存，更新可能滞后几分钟。
 
 ---
 
@@ -356,9 +362,11 @@ SKIP_FETCH=1 SKIP_VERIFY=1 bash scripts/build.sh   # 复用已有上游数据、
 |---|---|---|
 | `main` | 只有源码：`data/`、`scripts/`、`verify/`、工作流、文档 | 正常提交 |
 | `dist` | 产物 + Pages 站点（`clash/`、`xray/`、`index.html`、`.nojekyll`、两个 MANIFEST、PROVENANCE） | 每次构建**强推单快照**，永远 1 个提交 |
-| Releases | 同上，`rules-latest` 固定 tag | 每次重建 |
 | GitHub Pages | 从 `dist` 分支根发布 | 随 `dist` 更新 |
 
+> **不保留任何历史构建**：每次构建直接覆盖上一次（`dist` 强推、无 Release、无归档），
+> 所以任何时刻取到的都是最新版本。
+>
 > 产物不进 `main`：每天几 MB，提交进 main 一年能把仓库历史撑爆。
 >
 > [`.github/workflows/cleanup-history.yml`](.github/workflows/cleanup-history.yml)（每月 1 日 + 手动）
