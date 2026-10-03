@@ -185,7 +185,12 @@ def main() -> int:
         return 0
 
     UPSTREAM_DIR.mkdir(parents=True, exist_ok=True)
-    record: dict = {"fetched_by": "scripts/fetch_upstream.py", "sources": [], "groups": {}}
+    record: dict = {
+        "fetched_by": "scripts/fetch_upstream.py",
+        # 放进产物：文档页要显示「最后构建时间」，也方便排查「这份产物是哪次构建的」
+        "built_at": __import__("datetime").datetime.now(
+            __import__("datetime").timezone.utc).strftime("%Y-%m-%d %H:%M UTC"),
+        "sources": [], "groups": {}}
     problems: list[str] = []
 
     # ── 1. 拉取所有来源 ────────────────────────────────────────────────

@@ -228,7 +228,31 @@ fi
 cp "$TMP/advert.gg.yaml.bak" "$ROOT/dist/clash/advert.gg.yaml"
 
 echo
-echo "-- 7) 一致性：两种格式必须语义等价（同一份组装结果）--"
+echo "-- 7) Pages 站点内容完整性（订阅链接与文档同站，缺了就是站挂）--"
+PY_DOC=1
+python3 - <<'PY' || { echo "   ❌ Pages 内容不完整"; FAIL=1; }
+import json, pathlib, sys
+dist = pathlib.Path("dist")
+need = [dist / ".nojekyll", dist / "index.html", dist / "index.json",
+        dist / "examples" / "clash.yaml", dist / "examples" / "xray.json"]
+missing = [p.name for p in need if not p.exists()]
+if missing:
+    print(f"   缺: {missing}"); sys.exit(1)
+html = (dist / "index.html").read_text(encoding="utf-8")
+idx = json.loads((dist / "index.json").read_text(encoding="utf-8"))
+man = json.loads((dist / "clash" / "MANIFEST.json").read_text(encoding="utf-8"))
+# 文档页必须覆盖每个 rule-provider 的直链（否则有人照文档抄会 404）
+missing_links = [a["file"] for a in man["artifacts"] if a["file"] not in html]
+if missing_links:
+    print(f"   文档页缺这些产物的链接: {missing_links}"); sys.exit(1)
+if len(idx["artifacts"]) != len(man["artifacts"]):
+    print(f"   index.json 条数 {len(idx['artifacts'])} != MANIFEST {len(man['artifacts'])}")
+    sys.exit(1)
+print(f"   ✅ 文档页覆盖 {len(man['artifacts'])} 个产物直链，index.json 一致")
+PY
+
+echo
+echo "-- 8) 一致性：两种格式必须语义等价（同一份组装结果）--"
 if python3 scripts/verify_consistency.py; then
   echo "   ✅ 一致性校验通过"
 else
