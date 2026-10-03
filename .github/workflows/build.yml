@@ -43,6 +43,11 @@ jobs:
       - name: 生成 Xray geosite.dat / geoip.dat
         run: python3 scripts/build_xray_data.py
 
+      # GitHub Pages 站点源就是 dist 分支根，所以文档页与产物一起强推上去，
+      # 订阅链接与文档同域同源（一个地址记一辈子）。
+      - name: 生成 Pages 站点内容（文档页 + 示例片段）
+        run: python3 scripts/build_docs.py
+
       - name: 用真实内核校验产物（含变异检验 + 一致性）
         run: bash scripts/verify.sh
 
@@ -65,6 +70,8 @@ jobs:
           rm -rf "$ART" && mkdir -p "$ART"
           cp -r dist/. "$ART/"
           find "$ART" \( -name '*.db' -o -name '*.log' \) -delete
+          # Pages 靠这个文件关掉 Jekyll（否则会处理/过滤文件）
+          test -f "$ART/.nojekyll" || touch "$ART/.nojekyll"
           cd "$ART"
           git init -q -b dist
           git config user.name  "github-actions[bot]"
@@ -85,14 +92,17 @@ jobs:
           gh release create rules-latest \
             dist/xray/self-geosite.dat dist/xray/self-geoip.dat \
             dist/clash/*.yaml dist/clash/MANIFEST.json \
+            dist/index.html dist/index.json dist/examples/* \
             dist/PROVENANCE.json dist/MANIFEST.sha256 \
             --title "rules $(date -u +%Y-%m-%d)" \
             --notes "自持 + 上游合并的分流规则产物。
 
           - geosite.dat / geoip.dat：Xray 用，tag 为 SITE.CN / ADVERT.* / SELF-*
           - clash/*.yaml：mihomo rule-provider
-          - PROVENANCE.json：上游来源、sha256、条数、分类明细
+          - PROVENANCE.json：上游来源、sha256、条数、分类明细、构建时间
           - MANIFEST.sha256：全量产物校验和
+
+          固定订阅地址（GitHub Pages）：https://xinvxueyuan.github.io/proxy-rules/
 
           上游来源与许可证见 PROVENANCE.json 与 sources.json。
           提交：${{ github.sha }}"
