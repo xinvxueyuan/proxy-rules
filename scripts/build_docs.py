@@ -54,9 +54,9 @@ def build_index_json(manifest: dict) -> dict:
             "behavior": a["behavior"],
             "entries": a["entries"],
             "file": a["file"],
-            "url_pages": f"{PAGES_BASE}/clash/{a['file']}",
-            "url_raw": f"https://raw.githubusercontent.com/xinvxueyuan/proxy-rules/dist/clash/{a['file']}",
-            "url_release": f"{REPO_URL}/releases/latest/download/{a['file']}",
+            # 唯一订阅基址下的一条直链（不再给 raw / Release 备用地址：
+            # 多一个渠道就多一处要同步的文档，也容易让客户端配到不同来源）
+            "url": f"{PAGES_BASE}/clash/{a['file']}",
         })
     return {
         "generated_by": "scripts/build_docs.py",
@@ -196,8 +196,8 @@ def render_html(labels: dict[str, str], manifest: dict, built_at: str) -> str:
      <strong>Xray</strong> 两种格式，定时构建并发布。</p>
   <ul class="meta">
     <li>站点：<a href="{e(REPO_URL)}">仓库</a></li>
-    <li><a href="{e(REPO_URL)}/releases/latest">最新发布</a></li>
     <li><a href="{e(REPO_URL)}/actions/workflows/build.yml">构建状态</a></li>
+    <li><a href="{e(REPO_URL)}/tree/dist">产物分支</a></li>
     <li>最后构建：{e(built_at)}</li>
   </ul>
 
@@ -207,19 +207,25 @@ def render_html(labels: dict[str, str], manifest: dict, built_at: str) -> str:
   </div>
 
   <h2>订阅地址</h2>
-  <p>三种取法，内容相同，按场景选：</p>
+  <p><strong>唯一订阅基址</strong>（每日构建后单快照覆盖，没有历史版本，任何时刻取到的都是最新一次构建）：</p>
+  <pre><code>{e(PAGES_BASE)}/</code></pre>
+  <p>在该基址下按 tag 取文件：</p>
   <table>
-    <tr><th>方式</th><th>基址</th><th>适用</th></tr>
-    <tr><td>GitHub Pages（推荐）</td>
-        <td><code>{e(PAGES_BASE)}/clash/&lt;tag&gt;.yaml</code></td>
-        <td>CDN、地址固定；更新可能有几分钟缓存</td></tr>
-    <tr><td>raw 分支直链</td>
-        <td><code>raw.githubusercontent.com/xinvxueyuan/proxy-rules/dist/clash/&lt;tag&gt;.yaml</code></td>
-        <td>无需 Pages，取最新即时</td></tr>
-    <tr><td>Release 资产</td>
-        <td><code>{e(REPO_URL)}/releases/latest/download/&lt;文件&gt;</code></td>
-        <td>两个 <code>.dat</code> 与规则文件的稳定下载地址</td></tr>
+    <tr><th>用途</th><th>路径</th></tr>
+    <tr><td>Clash / mihomo rule-provider</td>
+        <td><code>{e(PAGES_BASE)}/clash/&lt;tag&gt;.yaml</code></td></tr>
+    <tr><td>Xray 域名规则集</td>
+        <td><code>{e(PAGES_BASE)}/xray/self-geosite.dat</code></td></tr>
+    <tr><td>Xray IP 规则集</td>
+        <td><code>{e(PAGES_BASE)}/xray/self-geoip.dat</code></td></tr>
+    <tr><td>产物索引（机器可读）</td>
+        <td><code>{e(PAGES_BASE)}/index.json</code></td></tr>
   </table>
+  <div class="note">
+    客户端仍按 tag 引多个 rule-provider（拦截 / 直连 / 代理是不同动作，必须分开），
+    但<strong>地址只有一个前缀</strong>。本页由构建流程自动生成，与产物一起发布，
+    所以站点上的文件与订阅内容永远同一次构建、不会错位。
+  </div>
 
   <h2>Clash / mihomo</h2>
   <pre><code>{e(cf_snippet())}</code></pre>

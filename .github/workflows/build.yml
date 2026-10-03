@@ -59,8 +59,11 @@ jobs:
           cat dist/MANIFEST.sha256
 
       # 产物不进 main：main 每天被几 MB 的产物撑一次会把历史撑爆。
-      # 改成往一个**孤立的 dist 分支**强推「只有一个快照提交」的分支，
-      # 这样 raw 直链依然可用，而分支历史永远只有 1 个提交、不会累积。
+      # 改成往一个**孤立的 dist 分支**强推「只有一个快照提交」的分支 ——
+      # 分支历史永远只有 1 个提交、不会累积，任何时刻拿到的都是最新一次构建。
+      #
+      # 这个分支同时是 GitHub Pages 的站点源（页面配置：dist 分支 / 根目录），
+      # 所以它就是**唯一的订阅渠道**：不再发 Release、不在文档里给 raw 直链。
       - name: 发布产物到 dist 分支（单快照强推）
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -83,26 +86,3 @@ jobs:
           echo "已强推 dist 分支，文件："
           git ls-files | sed 's/^/  /'
 
-      - name: 发布 .dat 与规则到 Release（固定 tag，地址稳定）
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          cd "$GITHUB_WORKSPACE"
-          gh release delete rules-latest --yes --cleanup-tag 2>/dev/null || true
-          gh release create rules-latest \
-            dist/xray/self-geosite.dat dist/xray/self-geoip.dat \
-            dist/clash/*.yaml dist/clash/MANIFEST.json \
-            dist/index.html dist/index.json dist/examples/* \
-            dist/PROVENANCE.json dist/MANIFEST.sha256 \
-            --title "rules $(date -u +%Y-%m-%d)" \
-            --notes "自持 + 上游合并的分流规则产物。
-
-          - geosite.dat / geoip.dat：Xray 用，tag 为 SITE.CN / ADVERT.* / SELF-*
-          - clash/*.yaml：mihomo rule-provider
-          - PROVENANCE.json：上游来源、sha256、条数、分类明细、构建时间
-          - MANIFEST.sha256：全量产物校验和
-
-          固定订阅地址（GitHub Pages）：https://xinvxueyuan.github.io/proxy-rules/
-
-          上游来源与许可证见 PROVENANCE.json 与 sources.json。
-          提交：${{ github.sha }}"
