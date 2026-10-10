@@ -1,0 +1,47 @@
+rule-providers:
+  advert.com:
+    type: http
+    behavior: domain
+    format: yaml
+    interval: 86400
+    url: https://xinvxueyuan.github.io/proxy-rules/clash/advert.com.yaml
+  advert.cn:
+    type: http
+    behavior: domain
+    format: yaml
+    interval: 86400
+    url: https://xinvxueyuan.github.io/proxy-rules/clash/advert.cn.yaml
+  self-proxy:
+    type: http
+    behavior: domain
+    format: yaml
+    interval: 86400
+    url: https://xinvxueyuan.github.io/proxy-rules/clash/self-proxy.yaml
+  site.cn:
+    type: http
+    behavior: domain
+    format: yaml
+    interval: 86400
+    url: https://xinvxueyuan.github.io/proxy-rules/clash/site.cn.yaml
+  self-direct:
+    type: http
+    behavior: domain
+    format: yaml
+    interval: 86400
+    url: https://xinvxueyuan.github.io/proxy-rules/clash/self-direct.yaml
+  self-direct-ip:
+    type: http
+    behavior: ipcidr
+    format: yaml
+    interval: 86400
+    url: https://xinvxueyuan.github.io/proxy-rules/clash/self-direct-ip.yaml
+
+rules:
+  - RULE-SET,advert.com,REJECT
+  - RULE-SET,advert.cn,REJECT
+  - RULE-SET,self-proxy,PROXY
+  - RULE-SET,site.cn,DIRECT
+  - RULE-SET,self-direct,DIRECT
+  - RULE-SET,self-direct-ip,DIRECT,no-resolve
+  - GEOIP,CN,DIRECT,no-resolve
+  - MATCH,PROXY

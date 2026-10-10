@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>proxy-rules — 自用分流规则（Clash / Xray）</title>
+<meta name="description" content="自用分流规则：一份自持数据编译成 mihomo rule-provider 与 Xray geosite/geoip dat，定时构建并发布。">
+<style>
+  :root { color-scheme: light dark; --fg:#1f2328; --muted:#59636e; --line:#d8dee4;
+           --bg:#fff; --code-bg:#f6f8fa; --accent:#0969da; }
+  @media (prefers-color-scheme: dark) {
+    :root { --fg:#e6edf3; --muted:#9198a1; --line:#30363d; --bg:#0d1117;
+             --code-bg:#161b22; --accent:#4493f8; }
+  }
+  * { box-sizing: border-box; }
+  body { margin:0; padding:2rem 1.25rem 4rem; background:var(--bg); color:var(--fg);
+          font:16px/1.65 -apple-system,BlinkMacSystemFont,"Segoe UI","Noto Sans SC",sans-serif; }
+  main { max-width: 60rem; margin: 0 auto; }
+  h1 { font-size:1.9rem; margin:0 0 .35rem; }
+  h2 { font-size:1.25rem; margin:2.4rem 0 .8rem; padding-bottom:.35rem;
+        border-bottom:1px solid var(--line); }
+  p.lead { color:var(--muted); margin:0 0 1.6rem; }
+  a { color:var(--accent); text-decoration:none; }
+  a:hover { text-decoration:underline; }
+  code { background:var(--code-bg); padding:.15em .35em; border-radius:4px;
+          font:0.9em ui-monospace,SFMono-Regular,Consolas,monospace; }
+  pre { background:var(--code-bg); padding:.9rem 1rem; border-radius:8px; overflow-x:auto;
+         border:1px solid var(--line); }
+  pre code { background:none; padding:0; }
+  table { border-collapse:collapse; width:100%; font-size:.94rem; }
+  th,td { text-align:left; padding:.45rem .6rem; border-bottom:1px solid var(--line); }
+  th { color:var(--muted); font-weight:600; }
+  td.num { white-space:nowrap; font-variant-numeric:tabular-nums; }
+  .meta { display:flex; flex-wrap:wrap; gap:.4rem .6rem; margin:0 0 1.2rem; padding:0; list-style:none; }
+  .meta li { font-size:.85rem; color:var(--muted); border:1px solid var(--line);
+              border-radius:999px; padding:.15rem .7rem; }
+  .note { border-left:3px solid var(--accent); padding:.5rem .9rem; margin:1rem 0;
+           background:var(--code-bg); border-radius:0 6px 6px 0; }
+  footer { margin-top:3rem; padding-top:1rem; border-top:1px solid var(--line);
+            color:var(--muted); font-size:.85rem; }
+</style>
+</head>
+<body>
+<main>
+  <h1>proxy-rules</h1>
+  <p class="lead">自用分流规则：一份自持数据，编译成 <strong>mihomo（Clash.Meta）</strong> 与
+     <strong>Xray</strong> 两种格式，定时构建并发布。</p>
+  <ul class="meta">
+    <li>站点：<a href="https://github.com/xinvxueyuan/proxy-rules">仓库</a></li>
+    <li><a href="https://github.com/xinvxueyuan/proxy-rules/actions/workflows/build.yml">构建状态</a></li>
+    <li><a href="https://github.com/xinvxueyuan/proxy-rules/tree/dist">产物分支</a></li>
+    <li>最后构建：2026-10-10 22:16 UTC</li>
+  </ul>
+
+  <div class="note">
+    <strong>分流模型</strong>：广告/追踪 → 拒绝 ｜ 自持强制代理 → 代理 ｜
+    国内域名与 IP → 直连 ｜ <strong>其余一切 → 代理（兜底）</strong>。
+  </div>
+
+  <h2>订阅地址</h2>
+  <p><strong>唯一订阅基址</strong>（每日构建后单快照覆盖，没有历史版本，任何时刻取到的都是最新一次构建）：</p>
+  <pre><code>https://xinvxueyuan.github.io/proxy-rules/</code></pre>
+  <p>在该基址下按 tag 取文件：</p>
+  <table>
+    <tr><th>用途</th><th>路径</th></tr>
+    <tr><td>Clash / mihomo rule-provider</td>
+        <td><code>https://xinvxueyuan.github.io/proxy-rules/clash/&lt;tag&gt;.yaml</code></td></tr>
+    <tr><td>Xray 域名规则集</td>
+        <td><code>https://xinvxueyuan.github.io/proxy-rules/xray/self-geosite.dat</code></td></tr>
+    <tr><td>Xray IP 规则集</td>
+        <td><code>https://xinvxueyuan.github.io/proxy-rules/xray/self-geoip.dat</code></td></tr>
+    <tr><td>产物索引（机器可读）</td>
+        <td><code>https://xinvxueyuan.github.io/proxy-rules/index.json</code></td></tr>
+  </table>
+  <div class="note">
+    客户端仍按 tag 引多个 rule-provider（拦截 / 直连 / 代理是不同动作，必须分开），
+    但<strong>地址只有一个前缀</strong>。本页由构建流程自动生成，与产物一起发布，
+    所以站点上的文件与订阅内容永远同一次构建、不会错位。
+  </div>
+
+  <h2>Clash / mihomo</h2>
+  <pre><code>rule-providers:
+  advert.com:
+    type: http
+    behavior: domain
+    format: yaml
+    interval: 86400
+    url: https://xinvxueyuan.github.io/proxy-rules/clash/advert.com.yaml
+  advert.cn:
+    type: http
+    behavior: domain
+    format: yaml
+    interval: 86400
+    url: https://xinvxueyuan.github.io/proxy-rules/clash/advert.cn.yaml
+  self-proxy:
+    type: http
+    behavior: domain
+    format: yaml
+    interval: 86400
+    url: https://xinvxueyuan.github.io/proxy-rules/clash/self-proxy.yaml
+  site.cn:
+    type: http
+    behavior: domain
+    format: yaml
+    interval: 86400
+    url: https://xinvxueyuan.github.io/proxy-rules/clash/site.cn.yaml
+  self-direct:
+    type: http
+    behavior: domain
+    format: yaml
+    interval: 86400
+    url: https://xinvxueyuan.github.io/proxy-rules/clash/self-direct.yaml
+  self-direct-ip:
+    type: http
+    behavior: ipcidr
+    format: yaml
+    interval: 86400
+    url: https://xinvxueyuan.github.io/proxy-rules/clash/self-direct-ip.yaml
+
+rules:
+  - RULE-SET,advert.com,REJECT
+  - RULE-SET,advert.cn,REJECT
+  - RULE-SET,self-proxy,PROXY
+  - RULE-SET,site.cn,DIRECT
+  - RULE-SET,self-direct,DIRECT
+  - RULE-SET,self-direct-ip,DIRECT,no-resolve
+  - GEOIP,CN,DIRECT,no-resolve
+  - MATCH,PROXY
+</code></pre>
+
+  <h2>Xray</h2>
+  <pre><code>{
+  &quot;_comment&quot;: &quot;domain 与 ip 必须拆成两条规则：同一条规则里两者是 AND，混写会永不命中（而 run -test 照样通过）。&quot;,
+  &quot;routing&quot;: {
+    &quot;domainStrategy&quot;: &quot;IPIfNonMatch&quot;,
+    &quot;rules&quot;: [
+      {
+        &quot;type&quot;: &quot;field&quot;,
+        &quot;outboundTag&quot;: &quot;blocked&quot;,
+        &quot;domain&quot;: [
+          &quot;ext:self-geosite.dat:advert.com&quot;,
+          &quot;ext:self-geosite.dat:advert.cn&quot;
+        ]
+      },
+      {
+        &quot;type&quot;: &quot;field&quot;,
+        &quot;outboundTag&quot;: &quot;proxy&quot;,
+        &quot;domain&quot;: [
+          &quot;ext:self-geosite.dat:self-proxy&quot;
+        ]
+      },
+      {
+        &quot;type&quot;: &quot;field&quot;,
+        &quot;outboundTag&quot;: &quot;direct&quot;,
+        &quot;domain&quot;: [
+          &quot;ext:self-geosite.dat:site.cn&quot;,
+          &quot;ext:self-geosite.dat:self-direct&quot;
+        ]
+      },
+      {
+        &quot;type&quot;: &quot;field&quot;,
+        &quot;outboundTag&quot;: &quot;direct&quot;,
+        &quot;ip&quot;: [
+          &quot;ext:self-geoip.dat:self-direct&quot;,
+          &quot;geoip:private&quot;,
+          &quot;geoip:cn&quot;
+        ]
+      },
+      {
+        &quot;type&quot;: &quot;field&quot;,
+        &quot;outboundTag&quot;: &quot;proxy&quot;,
+        &quot;network&quot;: &quot;tcp,udp&quot;
+      }
+    ]
+  },
+  &quot;_bootstrap&quot;: &quot;首次部署必须先手动下载一次 self-*.dat 放到资源目录：geodata 是「配置校验通过后才下载」，不能做首次引导（文件不存在时校验直接失败）。例：curl -fsSLO https://xinvxueyuan.github.io/proxy-rules/xray/self-geosite.dat&quot;,
+  &quot;geodata&quot;: {
+    &quot;cron&quot;: &quot;@daily&quot;,
+    &quot;assets&quot;: [
+      {
+        &quot;url&quot;: &quot;https://xinvxueyuan.github.io/proxy-rules/xray/self-geosite.dat&quot;,
+        &quot;file&quot;: &quot;self-geosite.dat&quot;
+      },
+      {
+        &quot;url&quot;: &quot;https://xinvxueyuan.github.io/proxy-rules/xray/self-geoip.dat&quot;,
+        &quot;file&quot;: &quot;self-geoip.dat&quot;
+      }
+    ]
+  }
+}
+</code></pre>
+  <div class="note">
+    <strong>首次部署必须先放一次 dat</strong>：<code>geodata</code> 是「配置校验通过后才下载」，
+    <strong>不能</strong>做首次引导 —— 文件不存在时配置校验直接失败退出
+    （<code>failed to open self-geosite.dat</code>）。先执行：
+    <pre><code>mkdir -p /usr/local/share/xray &amp;&amp; cd /usr/local/share/xray
+curl -fsSLO https://xinvxueyuan.github.io/proxy-rules/xray/self-geosite.dat
+curl -fsSLO https://xinvxueyuan.github.io/proxy-rules/xray/self-geoip.dat
+curl -fsSLo geosite.dat https://github.com/v2fly/domain-list-community/releases/latest/download/dlc.dat
+curl -fsSLo geoip.dat   https://github.com/v2fly/geoip/releases/latest/download/geoip.dat</code></pre>
+    之后 <code>geodata</code> 的 cron 才会接管更新。
+  </div>
+  <div class="note">
+    自建产物命名为 <code>self-geosite.dat</code> / <code>self-geoip.dat</code>，
+    避免与官方同名文件互相遮蔽（同名会让并写的 <code>geosite:cn</code>、
+    <code>geoip:private</code> 解析失败）。引用时用 <code>ext:self-geosite.dat:&lt;tag&gt;</code>。
+  </div>
+
+  <h2>规则组（共 21 个）</h2>
+  <table>
+    <tr><th>tag</th><th>说明</th><th>behavior</th><th>条数</th><th>Clash 文件</th></tr>
+    <tr><td><code>advert.cn</code></td><td>中文互联网隐私与追踪</td><td class="num">domain</td><td class="num">1,800</td><td><a href="https://xinvxueyuan.github.io/proxy-rules/clash/advert.cn.yaml">yaml</a></td></tr><tr><td><code>advert.com</code></td><td>商业广告（通用广告网络 ∪ 下列各生态子组）</td><td class="num">domain</td><td class="num">55,580</td><td><a href="https://xinvxueyuan.github.io/proxy-rules/clash/advert.com.yaml">yaml</a></td></tr><tr><td><code>advert.fb</code></td><td>Meta 隐私与广告</td><td class="num">domain</td><td class="num">6</td><td><a href="https://xinvxueyuan.github.io/proxy-rules/clash/advert.fb.yaml">yaml</a></td></tr><tr><td><code>advert.gg</code></td><td>谷歌隐私与广告</td><td class="num">domain</td><td class="num">48</td><td><a href="https://xinvxueyuan.github.io/proxy-rules/clash/advert.gg.yaml">yaml</a></td></tr><tr><td><code>advert.ms</code></td><td>微软隐私与广告</td><td class="num">domain</td><td class="num">392</td><td><a href="https://xinvxueyuan.github.io/proxy-rules/clash/advert.ms.yaml">yaml</a></td></tr><tr><td><code>advert.org</code></td><td>公益 / 非盈利广告（公共列表无源，纯自持）</td><td class="num">domain</td><td class="num">1</td><td><a href="https://xinvxueyuan.github.io/proxy-rules/clash/advert.org.yaml">yaml</a></td></tr><tr><td><code>advert.tg</code></td><td>Telegram 推广与追踪</td><td class="num">domain</td><td class="num">3</td><td><a href="https://xinvxueyuan.github.io/proxy-rules/clash/advert.tg.yaml">yaml</a></td></tr><tr><td><code>advert.x</code></td><td>推特（X）隐私与广告</td><td class="num">domain</td><td class="num">10</td><td><a href="https://xinvxueyuan.github.io/proxy-rules/clash/advert.x.yaml">yaml</a></td></tr><tr><td><code>self-direct</code></td><td>自持直连补充 —— 手写覆盖层，优先级高于上游大名单</td><td class="num">domain</td><td class="num">38</td><td><a href="https://xinvxueyuan.github.io/proxy-rules/clash/self-direct.yaml">yaml</a></td></tr><tr><td><code>self-direct-ip</code></td><td>自持直连 IP —— 国内公共 DNS 等按 IP 直连</td><td class="num">ipcidr</td><td class="num">9</td><td><a href="https://xinvxueyuan.github.io/proxy-rules/clash/self-direct-ip.yaml">yaml</a></td></tr><tr><td><code>self-proxy</code></td><td>自持强制代理 —— 用来覆盖上游大名单的误判（该走代理的域名）</td><td class="num">domain</td><td class="num">83</td><td><a href="https://xinvxueyuan.github.io/proxy-rules/clash/self-proxy.yaml">yaml</a></td></tr><tr><td><code>site.cn</code></td><td>国内域名直连（上游大名单 ∪ 9 个手工分类组）</td><td class="num">domain</td><td class="num">111,837</td><td><a href="https://xinvxueyuan.github.io/proxy-rules/clash/site.cn.yaml">yaml</a></td></tr><tr><td><code>site.cn.edu</code></td><td>中国教育（通配根域名，手工保底）</td><td class="num">domain</td><td class="num">33</td><td><a href="https://xinvxueyuan.github.io/proxy-rules/clash/site.cn.edu.yaml">yaml</a></td></tr><tr><td><code>site.cn.fin</code></td><td>中国金融（通配根域名，手工保底）</td><td class="num">domain</td><td class="num">78</td><td><a href="https://xinvxueyuan.github.io/proxy-rules/clash/site.cn.fin.yaml">yaml</a></td></tr><tr><td><code>site.cn.gov</code></td><td>中国政务（通配根域名，手工保底）</td><td class="num">domain</td><td class="num">15</td><td><a href="https://xinvxueyuan.github.io/proxy-rules/clash/site.cn.gov.yaml">yaml</a></td></tr><tr><td><code>site.cn.life</code></td><td>中国生活服务（通配根域名，手工保底）</td><td class="num">domain</td><td class="num">61</td><td><a href="https://xinvxueyuan.github.io/proxy-rules/clash/site.cn.life.yaml">yaml</a></td></tr><tr><td><code>site.cn.map</code></td><td>中国地图（通配根域名，手工保底）</td><td class="num">domain</td><td class="num">12</td><td><a href="https://xinvxueyuan.github.io/proxy-rules/clash/site.cn.map.yaml">yaml</a></td></tr><tr><td><code>site.cn.med</code></td><td>中国医疗（通配根域名，手工保底）</td><td class="num">domain</td><td class="num">24</td><td><a href="https://xinvxueyuan.github.io/proxy-rules/clash/site.cn.med.yaml">yaml</a></td></tr><tr><td><code>site.cn.media</code></td><td>中国媒体（通配根域名，手工保底）</td><td class="num">domain</td><td class="num">60</td><td><a href="https://xinvxueyuan.github.io/proxy-rules/clash/site.cn.media.yaml">yaml</a></td></tr><tr><td><code>site.cn.shop</code></td><td>中国购物（通配根域名，手工保底）</td><td class="num">domain</td><td class="num">48</td><td><a href="https://xinvxueyuan.github.io/proxy-rules/clash/site.cn.shop.yaml">yaml</a></td></tr><tr><td><code>site.cn.travel</code></td><td>中国出行（通配根域名，手工保底）</td><td class="num">domain</td><td class="num">49</td><td><a href="https://xinvxueyuan.github.io/proxy-rules/clash/site.cn.travel.yaml">yaml</a></td></tr>
+  </table>
+  <p>另外两个 Xray 专用二进制（不进上面的表）：
+     <a href="https://xinvxueyuan.github.io/proxy-rules/xray/self-geosite.dat"><code>self-geosite.dat</code></a>（域名规则集）、
+     <a href="https://xinvxueyuan.github.io/proxy-rules/xray/self-geoip.dat"><code>self-geoip.dat</code></a>（IP 规则集）。</p>
+
+  <h2>校验与保证</h2>
+  <p>每次构建都会：</p>
+  <ul>
+    <li>用<strong>真实内核</strong>加载产物 —— mihomo 启动后查 <code>/providers/rules</code>
+        的真实规则条数并与清单逐项对齐；Xray 用 <code>run -test</code> 加载
+        <code>ext:</code> 引用的 dat（并与官方 dat 同目录，验证不遮蔽）。</li>
+    <li>做<strong>变异检验</strong>：故意删文件 / 写坏内容 / 清空规则集，校验必须报错，
+        否则说明校验本身是空壳。</li>
+    <li>断言<strong>两种格式语义等价</strong>（同一份组装结果）。</li>
+  </ul>
+
+  <footer>
+    <p>上游来源与其许可证记录在产物里的 <code>PROVENANCE.json</code>，
+       声明在仓库的 <code>sources.json</code>。本仓以 GPL-3.0 发布。</p>
+    <p>产物索引（机器可读）：<a href="./index.json"><code>index.json</code></a>。</p>
+  </footer>
+</main>
+</body>
+</html>

@@ -1,0 +1,215 @@
+{
+  "generated_by": "scripts/build_clash.py",
+  "artifacts": [
+    {
+      "name": "advert.cn",
+      "file": "advert.cn.yaml",
+      "sources": [
+        "build/data/advert.cn"
+      ],
+      "behavior": "domain",
+      "entries": 1800,
+      "sha256": "07a16be2be2513087cff779f7b14fa0801b954910ddad25d5438f31ff0c1bcd6"
+    },
+    {
+      "name": "advert.com",
+      "file": "advert.com.yaml",
+      "sources": [
+        "build/data/advert.com"
+      ],
+      "behavior": "domain",
+      "entries": 55580,
+      "sha256": "7ca4a06fabf21723942bcad73c97299c0fed10a480aa97aa9409facf14d31490"
+    },
+    {
+      "name": "advert.fb",
+      "file": "advert.fb.yaml",
+      "sources": [
+        "build/data/advert.fb"
+      ],
+      "behavior": "domain",
+      "entries": 6,
+      "sha256": "d66c723ab36ca6acac2d0620dc31597777b2c727234fd8f1f1c6a326a8d7ae6c"
+    },
+    {
+      "name": "advert.gg",
+      "file": "advert.gg.yaml",
+      "sources": [
+        "build/data/advert.gg"
+      ],
+      "behavior": "domain",
+      "entries": 48,
+      "sha256": "f82dd54620330837523d0bce7008ac66a7e315467c717d3f372b03b95a6ae058"
+    },
+    {
+      "name": "advert.ms",
+      "file": "advert.ms.yaml",
+      "sources": [
+        "build/data/advert.ms"
+      ],
+      "behavior": "domain",
+      "entries": 392,
+      "sha256": "34d20e04222ccb8fd69afb170c138ed0b69852d84487bc3c782c28968c627bbc"
+    },
+    {
+      "name": "advert.org",
+      "file": "advert.org.yaml",
+      "sources": [
+        "build/data/advert.org"
+      ],
+      "behavior": "domain",
+      "entries": 1,
+      "sha256": "9f7e58debcc9cd62f07f04bb2bf974d1c470b45d65d5517339a5fb0aa1e351e9"
+    },
+    {
+      "name": "advert.tg",
+      "file": "advert.tg.yaml",
+      "sources": [
+        "build/data/advert.tg"
+      ],
+      "behavior": "domain",
+      "entries": 3,
+      "sha256": "24c8a5dae5285cdd6ad3fbee55fa6105058960be516b0d6b4cdf868c14c4e814"
+    },
+    {
+      "name": "advert.x",
+      "file": "advert.x.yaml",
+      "sources": [
+        "build/data/advert.x"
+      ],
+      "behavior": "domain",
+      "entries": 10,
+      "sha256": "2924ffebe54c48e908974c76c603d5683db5f9d80cb43496aa5331a78e6b9963"
+    },
+    {
+      "name": "self-direct",
+      "file": "self-direct.yaml",
+      "sources": [
+        "build/data/self-direct"
+      ],
+      "behavior": "domain",
+      "entries": 38,
+      "sha256": "eafe261b6acc8e063de67acff91417d2adb6105c40f480b11e9e860c173bf277"
+    },
+    {
+      "name": "self-proxy",
+      "file": "self-proxy.yaml",
+      "sources": [
+        "build/data/self-proxy"
+      ],
+      "behavior": "domain",
+      "entries": 83,
+      "sha256": "0cc27cdb570a59d0931b2ecd2a1caf220c9728284c848ad8100697b20bb797b8"
+    },
+    {
+      "name": "site.cn",
+      "file": "site.cn.yaml",
+      "sources": [
+        "build/data/site.cn"
+      ],
+      "behavior": "domain",
+      "entries": 111837,
+      "sha256": "9ce34f40eb339cb8f27651371655742c3cb47da24e09ca5beb64e848169b7c85"
+    },
+    {
+      "name": "site.cn.edu",
+      "file": "site.cn.edu.yaml",
+      "sources": [
+        "build/data/site.cn.edu"
+      ],
+      "behavior": "domain",
+      "entries": 33,
+      "sha256": "1b63eb728f31b79757781a187dd7a9f3f2123e749391341a5d635e0ca12ff178"
+    },
+    {
+      "name": "site.cn.fin",
+      "file": "site.cn.fin.yaml",
+      "sources": [
+        "build/data/site.cn.fin"
+      ],
+      "behavior": "domain",
+      "entries": 78,
+      "sha256": "0e56d9d09b0370398f8180fb640f234e1cef9dc5efe1a1e153ca296c59b2c974"
+    },
+    {
+      "name": "site.cn.gov",
+      "file": "site.cn.gov.yaml",
+      "sources": [
+        "build/data/site.cn.gov"
+      ],
+      "behavior": "domain",
+      "entries": 15,
+      "sha256": "9918b9d6deeec518d620cc936034fd25a0f7233ea995d71ab16c6184a4577dba"
+    },
+    {
+      "name": "site.cn.life",
+      "file": "site.cn.life.yaml",
+      "sources": [
+        "build/data/site.cn.life"
+      ],
+      "behavior": "domain",
+      "entries": 61,
+      "sha256": "d00cac561c004473fd23c582458186530ff9b7c6a02c72fd1c663964794393c4"
+    },
+    {
+      "name": "site.cn.map",
+      "file": "site.cn.map.yaml",
+      "sources": [
+        "build/data/site.cn.map"
+      ],
+      "behavior": "domain",
+      "entries": 12,
+      "sha256": "f285ff9ee0f4c89d4a1063b07c98bd3c98cb96147b14d960d261909a282f5c13"
+    },
+    {
+      "name": "site.cn.med",
+      "file": "site.cn.med.yaml",
+      "sources": [
+        "build/data/site.cn.med"
+      ],
+      "behavior": "domain",
+      "entries": 24,
+      "sha256": "a7ccd1d3a87d99a633b1411b03593e91101925623dc619d17ed78446bded83bc"
+    },
+    {
+      "name": "site.cn.media",
+      "file": "site.cn.media.yaml",
+      "sources": [
+        "build/data/site.cn.media"
+      ],
+      "behavior": "domain",
+      "entries": 60,
+      "sha256": "f33f0aad103452bf1a1ee4511c007fde99265b6e83b9458caa563d20930e13a0"
+    },
+    {
+      "name": "site.cn.shop",
+      "file": "site.cn.shop.yaml",
+      "sources": [
+        "build/data/site.cn.shop"
+      ],
+      "behavior": "domain",
+      "entries": 48,
+      "sha256": "b4727250bc76d7364c6d9ebf9bfcb5ecc86fc777f878c60e35cdf461d9e717e3"
+    },
+    {
+      "name": "site.cn.travel",
+      "file": "site.cn.travel.yaml",
+      "sources": [
+        "build/data/site.cn.travel"
+      ],
+      "behavior": "domain",
+      "entries": 49,
+      "sha256": "0629b475e24698b4d5c77537423e91f69c89e7df5ae11f1446bbd3c9925d822b"
+    },
+    {
+      "name": "self-direct-ip",
+      "file": "self-direct-ip.yaml",
+      "sources": [
+        "data/ip/self-direct.txt"
+      ],
+      "behavior": "ipcidr",
+      "entries": 9,
+      "sha256": "98f719f0c78e99bade82760c9c966f9ff85033c4133ed7959825247e0f3913c2"
+    }
+  ]
+}
