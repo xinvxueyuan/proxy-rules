@@ -1,0 +1,59 @@
+{
+  "_comment": "domain 与 ip 必须拆成两条规则：同一条规则里两者是 AND，混写会永不命中（而 run -test 照样通过）。",
+  "routing": {
+    "domainStrategy": "IPIfNonMatch",
+    "rules": [
+      {
+        "type": "field",
+        "outboundTag": "blocked",
+        "domain": [
+          "ext:self-geosite.dat:advert.com",
+          "ext:self-geosite.dat:advert.cn"
+        ]
+      },
+      {
+        "type": "field",
+        "outboundTag": "proxy",
+        "domain": [
+          "ext:self-geosite.dat:self-proxy"
+        ]
+      },
+      {
+        "type": "field",
+        "outboundTag": "direct",
+        "domain": [
+          "ext:self-geosite.dat:site.cn",
+          "ext:self-geosite.dat:self-direct"
+        ]
+      },
+      {
+        "type": "field",
+        "outboundTag": "direct",
+        "ip": [
+          "ext:self-geoip.dat:self-direct",
+          "geoip:private",
+          "geoip:cn"
+        ]
+      },
+      {
+        "type": "field",
+        "outboundTag": "proxy",
+        "network": "tcp,udp"
+      }
+    ]
+  },
+  "_bootstrap": "首次部署必须先手动下载一次 self-*.dat 放到资源目录：geodata 是「配置校验通过后才下载」，不能做首次引导（文件不存在时校验直接失败）。例：curl -fsSLO https://xinvxueyuan.github.io/proxy-rules/xray/self-geosite.dat",
+  "geodata": {
+    "cron": "@daily",
+    "assets": [
+      {
+        "url": "https://xinvxueyuan.github.io/proxy-rules/xray/self-geosite.dat",
+        "file": "self-geosite.dat"
+      },
+      {
+        "url": "https://xinvxueyuan.github.io/proxy-rules/xray/self-geoip.dat",
+        "file": "self-geoip.dat"
+      }
+    ]
+  }
+}
