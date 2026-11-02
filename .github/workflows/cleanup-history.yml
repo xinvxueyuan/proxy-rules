@@ -54,8 +54,8 @@ jobs:
           set -euo pipefail
           pip install --quiet git-filter-repo
           cd repo
-          git filter-repo --invert-paths \\
-            --path dist --path commit-msg.txt \\
+          git filter-repo --invert-paths \
+            --path dist --path commit-msg.txt \
             --refs refs/heads/main --force
           git push --force origin main
           echo "清理后 main 提交数 = $(git rev-list --count main)"
@@ -67,7 +67,7 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           set -euo pipefail
-          rm -rf verify && git clone --quiet \\
+          rm -rf verify && git clone --quiet \
             "https://x-access-token:${GH_TOKEN}@github.com/${GITHUB_REPOSITORY}.git" verify
           cd verify
           left=$(git log main --pretty=format: --name-only --diff-filter=A | grep -c '^dist/' || true)
